@@ -1,0 +1,28 @@
+import type { ButtonHTMLAttributes } from "react";
+
+import "./Button.css";
+
+interface ButtonProps
+    extends ButtonHTMLAttributes<HTMLButtonElement> {
+    variant?: "primary" | "danger";
+}
+
+function Button({
+    children,
+    variant = "primary",
+    className = "",
+    type = "button",
+    ...props
+}: ButtonProps) {
+    return (
+        <button
+            type={type}
+            className={`button button-${variant} ${className}`.trim()}
+            {...props}
+        >
+            {children}
+        </button>
+    );
+}
+
+export default Button;

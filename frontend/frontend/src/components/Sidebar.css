@@ -1,0 +1,37 @@
+.sidebar {
+    width: 220px;
+    min-height: calc(100vh - 73px);
+
+    padding: 20px 12px;
+
+    background-color: var(--color-primary);
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar-link {
+    padding: 12px 14px;
+
+    border-radius: var(--border-radius);
+
+    color: white;
+
+    font-weight: 500;
+
+    transition:
+        background-color 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-link.active {
+    background-color: white;
+    color: var(--color-primary);
+}
