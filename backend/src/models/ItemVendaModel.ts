@@ -2,6 +2,7 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { database } from "../config/database";
 import { ItemVenda } from "../types/itemvenda";
 
+// Representa um item de venda no formato retornado pela tabela itens_venda.
 interface ItemVendaRow extends RowDataPacket {
     id: number;
     venda_id: number;
@@ -10,9 +11,12 @@ interface ItemVendaRow extends RowDataPacket {
     preco_unitario: number;
 }
 
+// Define os dados de um item ainda sem o identificador gerado pelo banco.
 type NovoItemVenda = Omit<ItemVenda, "id">;
 
+// Centraliza consultas e alteracoes dos itens associados as vendas.
 export class ItemVendaModel {
+    // Registra um item dentro de uma venda e devolve seu ID.
     static async create(
         itemVenda: NovoItemVenda
     ): Promise<number> {
@@ -37,6 +41,7 @@ export class ItemVendaModel {
         return result.insertId;
     }
 
+    // Busca um item pelo ID ou retorna null quando ele nao existe.
     static async findById(
         id: number
     ): Promise<ItemVenda | null> {
@@ -67,6 +72,7 @@ export class ItemVendaModel {
         };
     }
 
+    // Consulta todos os itens e converte valores numericos do MySQL.
     static async findAll(): Promise<ItemVenda[]> {
         const [rows] = await database.execute<ItemVendaRow[]>(
             `
@@ -89,6 +95,7 @@ export class ItemVendaModel {
         }));
     }
 
+    // Atualiza os dados e os vinculos de um item de venda.
     static async update(
         id: number,
         itemVenda: NovoItemVenda
@@ -115,6 +122,7 @@ export class ItemVendaModel {
         return result.affectedRows > 0;
     }
 
+    // Exclui um item pelo ID e informa se alguma linha foi removida.
     static async delete(
         id: number
     ): Promise<boolean> {
@@ -129,6 +137,7 @@ export class ItemVendaModel {
         return result.affectedRows > 0;
     }
 
+    // Lista todos os itens vinculados a uma venda especifica.
     static async findByVendaId(
         vendaId: number
     ): Promise<ItemVenda[]> {

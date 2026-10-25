@@ -1,25 +1,78 @@
 @import 'tailwindcss';
 
-:root {
-    font-family: Arial, Helvetica, sans-serif;
+/* =========================================================
+   MS² VESTUÁRIO — TOKENS GLOBAIS DE TEMA (CLARO & ESCURO)
+   ========================================================= */
 
-    --color-primary: #1f2937;
-    --color-primary-hover: #111827;
+:root,
+html[data-theme="dark"],
+html.dark {
+    color-scheme: dark;
 
-    --color-background: #f3f4f6;
-    --color-surface: #ffffff;
+    --theme-bg: #080d18;
+    --theme-bg-subtle: #0b1020;
+    --theme-surface: #101729;
+    --theme-surface-raised: #151e33;
+    --theme-surface-soft: rgba(148, 163, 184, 0.06);
+    --theme-border: rgba(148, 163, 184, 0.14);
+    --theme-border-strong: rgba(148, 163, 184, 0.24);
+    --theme-border-hover: rgba(129, 140, 248, 0.45);
+    --theme-text: #eef2ff;
+    --theme-text-strong: #ffffff;
+    --theme-text-muted: #94a3b8;
+    --theme-text-subtle: #64748b;
+    --theme-primary: #818cf8;
+    --theme-primary-hover: #6366f1;
+    --theme-cyan: #38bdf8;
+    --theme-success: #34d399;
+    --theme-warning: #fbbf24;
+    --theme-danger: #f87171;
 
-    --color-text: #1f2937;
-    --color-text-light: #6b7280;
+    /* Aliases legados */
+    --color-background: var(--theme-bg);
+    --color-surface: var(--theme-surface);
+    --color-text: var(--theme-text);
+    --color-text-light: var(--theme-text-muted);
+    --color-border: var(--theme-border);
+    --color-primary: var(--theme-primary);
+    --color-primary-hover: var(--theme-primary-hover);
+    --color-success: var(--theme-success);
+    --color-danger: var(--theme-danger);
+}
 
-    --color-border: #d1d5db;
+html[data-theme="light"],
+html.light {
+    color-scheme: light;
 
-    --color-success: #16a34a;
-    --color-danger: #dc2626;
+    --theme-bg: #f4f6fb;
+    --theme-bg-subtle: #ffffff;
+    --theme-surface: #ffffff;
+    --theme-surface-raised: #ffffff;
+    --theme-surface-soft: rgba(15, 23, 42, 0.04);
+    --theme-border: #e2e8f0;
+    --theme-border-strong: #cbd5e1;
+    --theme-border-hover: #6366f1;
+    --theme-text: #0f172a;
+    --theme-text-strong: #020617;
+    --theme-text-muted: #64748b;
+    --theme-text-subtle: #94a3b8;
+    --theme-primary: #6366f1;
+    --theme-primary-hover: #4f46e5;
+    --theme-cyan: #0284c7;
+    --theme-success: #059669;
+    --theme-warning: #d97706;
+    --theme-danger: #dc2626;
 
-    --border-radius: 8px;
-
-    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.08);
+    /* Aliases legados */
+    --color-background: var(--theme-bg);
+    --color-surface: var(--theme-surface);
+    --color-text: var(--theme-text);
+    --color-text-light: var(--theme-text-muted);
+    --color-border: var(--theme-border);
+    --color-primary: var(--theme-primary);
+    --color-primary-hover: var(--theme-primary-hover);
+    --color-success: var(--theme-success);
+    --color-danger: var(--theme-danger);
 }
 
 * {
@@ -33,11 +86,19 @@ body,
 #root {
     width: 100%;
     min-height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+html {
+    background: var(--theme-bg);
 }
 
 body {
-    background-color: var(--color-background);
-    color: var(--color-text);
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 button,
@@ -56,25 +117,21 @@ a {
     text-decoration: none;
 }
 
-/* ======================================================
-   Cabeçalho padrão das páginas
-   ====================================================== */
-
-.page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    margin-bottom: 24px;
+/* Scrollbars adaptáveis ao tema */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
 }
 
-.page-header h1 {
-    margin-bottom: 6px;
-
-    font-size: 26px;
-    color: var(--color-text);
+::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-.page-header p {
-    color: var(--color-text-light);
+::-webkit-scrollbar-thumb {
+    background: var(--theme-border-strong);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--theme-text-subtle);
 }

@@ -1518,3 +1518,95 @@
         animation-iteration-count: 1 !important;
     }
 }
+
+
+/* =========================================================
+   REFORÇO DO TEMA CLARO NO PDV
+   ========================================================= */
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-card {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-field input,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-field select {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-field select option {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-pay-option {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-pay-option.is-active {
+    background: #e0e7ff;
+    border-color: #6366f1;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-cart-item {
+    background: #ffffff;
+    border-color: #e2e8f0;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-installment {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-installment.is-active {
+    background: #6366f1;
+    color: #ffffff;
+    border-color: #6366f1;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-step {
+    background: #e0e7ff;
+    color: #4f46e5;
+    border-color: #c7d2fe;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-hero h1,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-card h2,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-cart-item strong,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-total > strong {
+    color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-hero p,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-card > p,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-pay-option small,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-installment-info {
+    color: #64748b;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-total {
+    border-color: #c7d2fe;
+    background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-total > small {
+    color: #5b21b6;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page .pdv-pay-info {
+    color: #475569;
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page button:focus-visible,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page input:focus-visible,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light, .light-theme, .ms2-dashboard--light) .pdv-page select:focus-visible {
+    outline-color: rgba(79, 70, 229, .55);
+}

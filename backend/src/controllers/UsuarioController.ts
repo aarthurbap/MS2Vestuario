@@ -4,12 +4,14 @@ import jwt from "jsonwebtoken";
 
 import { UsuarioModel } from "../models/UsuarioModel";
 
+// Controla cadastro, consulta, alteracao, exclusao e autenticacao de usuarios.
 export class UsuarioController {
 
     // ======================================================
     // REGISTER - Cadastro público limitado ao perfil caixa
     // ======================================================
 
+    // Cria uma conta publica com perfil fixo de caixa e senha protegida por hash.
     static async register(
         req: Request,
         res: Response
@@ -78,6 +80,7 @@ export class UsuarioController {
     // CREATE - Cadastrar usuário
     // ======================================================
 
+    // Cadastra um usuario administrativo com perfil validado e senha criptografada.
     static async create(
         req: Request,
         res: Response
@@ -162,6 +165,7 @@ export class UsuarioController {
     // FIND ALL - Listar usuários
     // ======================================================
 
+    // Lista usuarios sem incluir o hash das senhas na resposta da API.
     static async findAll(
         req: Request,
         res: Response
@@ -193,6 +197,7 @@ export class UsuarioController {
     // FIND BY ID - Buscar usuário
     // ======================================================
 
+    // Busca um usuario pelo identificador sem expor sua senha.
     static async findById(
         req: Request,
         res: Response
@@ -240,6 +245,7 @@ export class UsuarioController {
     // UPDATE - Atualizar usuário
     // ======================================================
 
+    // Valida os dados e atualiza o cadastro, gerando um novo hash para a senha.
     static async update(
         req: Request,
         res: Response
@@ -343,6 +349,7 @@ export class UsuarioController {
     // DELETE - Excluir usuário
     // ======================================================
 
+    // Exclui um usuario existente e trata impedimentos por vendas vinculadas.
     static async delete(
         req: Request,
         res: Response
@@ -400,6 +407,7 @@ export class UsuarioController {
     // LOGIN - Autenticar usuário
     // ======================================================
 
+    // Confere as credenciais e emite um token JWT valido por duas horas.
     static async login(
         req: Request,
         res: Response

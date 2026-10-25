@@ -9,8 +9,10 @@ import {
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
 import PDV from "../pages/PDV";
+import Vendas from "../pages/Vendas";
 import Produtos from "../pages/Produtos";
 import Clientes from "../pages/Clientes";
+import Relatorios from "../pages/Relatorios";
 
 // ======================================================
 // PROTEÇÃO DE ROTAS
@@ -29,8 +31,6 @@ function RotaProtegida() {
 // ======================================================
 // ROTAS DO FRONTEND
 // Dashboard é o layout compartilhado das áreas internas.
-// Não adicionar AppLayout aqui, pois isso duplicaria o menu
-// antigo (cabeçalho branco e sidebar legada).
 // ======================================================
 
 function AppRoutes() {
@@ -65,6 +65,16 @@ function AppRoutes() {
                         <Route
                             path="/pdv"
                             element={<PDV />}
+                        />
+
+                        <Route
+                            path="/vendas"
+                            element={<Vendas />}
+                        />
+
+                        <Route
+                            path="/relatorios"
+                            element={<Relatorios />}
                         />
                     </Route>
                 </Route>

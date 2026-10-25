@@ -2,13 +2,16 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { database } from "../config/database";
 import { Categoria } from "../types/categoria";
 
+// Representa uma linha de categoria retornada pelo MySQL.
 interface CategoriaRow extends RowDataPacket {
     id: number;
     nome: string;
     descricao: string | null;
 }
 
+// Centraliza as consultas e alteracoes da tabela de categorias.
 export class CategoriaModel {
+    // Insere uma categoria e devolve o ID gerado pelo banco.
     static async create(
         categoria: Omit<Categoria, "id">
     ): Promise<number> {
@@ -29,6 +32,7 @@ export class CategoriaModel {
         return result.insertId;
     }
 
+    // Busca uma categoria pelo ID ou retorna null quando ela nao existe.
     static async findById(
         id: number
     ): Promise<Categoria | null> {
@@ -55,6 +59,7 @@ export class CategoriaModel {
         };
     }
 
+    // Consulta todas as categorias e converte as linhas para o tipo da aplicacao.
     static async findAll(): Promise<Categoria[]> {
         const [rows] = await database.execute<CategoriaRow[]>(
             `
@@ -73,6 +78,7 @@ export class CategoriaModel {
         }));
     }
 
+    // Atualiza nome e descricao e informa se alguma linha foi afetada.
     static async update(
         id: number,
         categoria: Omit<Categoria, "id">
@@ -95,6 +101,7 @@ export class CategoriaModel {
         return result.affectedRows > 0;
     }
 
+    // Remove uma categoria e informa se alguma linha foi excluida.
     static async delete(
         id: number
     ): Promise<boolean> {

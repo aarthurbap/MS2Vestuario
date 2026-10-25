@@ -5,7 +5,9 @@
    em Produtos.tsx (nada sobrando, nada faltando).
    ========================================================= */
 
-.produtos-page {
+.produtos-page,
+.produtos-modal,
+.produtos-confirmacao-modal {
     /* Cores */
     --prod-surface: linear-gradient(145deg, rgba(19, 27, 46, 0.95), rgba(13, 20, 35, 0.96));
     --prod-field-bg: rgba(5, 10, 21, 0.72);
@@ -470,6 +472,22 @@
     transition: border-color var(--prod-ease), box-shadow var(--prod-ease), background-color var(--prod-ease);
 }
 
+.produtos-modal :where(input:not([type="checkbox"]), select, textarea) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 13px;
+    color: var(--prod-text);
+    background-color: var(--prod-field-bg);
+    border: 1px solid var(--prod-border-strong);
+    border-radius: var(--prod-radius-md);
+    outline: none;
+    font-size: var(--prod-fs-md);
+    line-height: 1.5;
+    transition: border-color var(--prod-ease), box-shadow var(--prod-ease), background-color var(--prod-ease);
+}
+
 .produtos-page :where(input:not([type="checkbox"]), select, textarea):hover {
     border-color: rgba(148, 163, 184, 0.32);
 }
@@ -570,9 +588,11 @@
 
 .produtos-checkbox input {
     position: absolute;
+    overflow: hidden;
     width: 1px;
     height: 1px;
-    opacity: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
 .produtos-checkbox-trilho {
@@ -609,6 +629,120 @@
 .produtos-checkbox input:focus-visible + .produtos-checkbox-trilho {
     outline: 2px solid var(--prod-cyan);
     outline-offset: 2px;
+}
+
+.produtos-disponibilidade-texto {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.45;
+}
+
+.produtos-erro-campo {
+    margin-top: -3px;
+    color: var(--prod-danger);
+    font-size: var(--prod-fs-xs);
+    line-height: 1.4;
+}
+
+.produtos-page [aria-invalid="true"],
+.produtos-modal [aria-invalid="true"] {
+    border-color: var(--prod-danger) !important;
+}
+
+.produtos-modal-overlay {
+    position: fixed;
+    z-index: 12000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(12px, 3vw, 30px);
+    overflow-y: auto;
+    background: rgba(3, 6, 14, 0.72);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    animation: produtos-entrar 180ms ease both;
+}
+
+.produtos-modal {
+    width: min(100%, 760px);
+    max-height: min(92dvh, 860px);
+    margin: auto;
+    overflow-y: auto;
+    background:
+        radial-gradient(ellipse at 100% 0%, rgba(99, 102, 241, 0.09), transparent 42%),
+        var(--prod-surface);
+    border-color: var(--prod-border-hover);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42);
+    animation: produtos-modal-entrar 200ms ease both;
+}
+
+.produtos-confirmacao-modal {
+    width: min(100%, 440px);
+    margin: auto;
+    padding: 30px;
+    text-align: center;
+    border-color: var(--prod-border-hover);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42);
+    animation: produtos-modal-entrar 200ms ease both;
+}
+
+.produtos-confirmacao-icone {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 16px;
+    color: var(--prod-warning);
+    background: color-mix(in srgb, var(--prod-warning) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--prod-warning) 32%, transparent);
+    border-radius: 16px;
+    font-size: 26px;
+    font-weight: 800;
+}
+
+.produtos-confirmacao-modal h2 {
+    margin: 0;
+    color: var(--prod-text-strong);
+    font-size: 20px;
+    font-weight: 750;
+}
+
+.produtos-confirmacao-modal p {
+    margin: 10px 0 24px;
+    color: var(--prod-muted);
+    font-size: var(--prod-fs-md);
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.produtos-confirmacao-modal p strong {
+    color: var(--prod-text);
+}
+
+.produtos-confirmacao-acoes {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+@media (max-width: 480px) {
+    .produtos-confirmacao-modal {
+        padding: 24px 20px;
+    }
+
+    .produtos-confirmacao-acoes {
+        flex-direction: column-reverse;
+    }
+
+    .produtos-confirmacao-acoes .produtos-btn {
+        width: 100%;
+    }
+}
+
+@keyframes produtos-modal-entrar {
+    from { opacity: 0; transform: translateY(8px) scale(.99); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .produtos-form-actions {
@@ -1043,4 +1177,132 @@
     object-fit: cover;
     object-position: center;
     display: block;
+}
+
+
+/* =========================================================
+   TEMA CLARO — PRODUTOS
+   ========================================================= */
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-page {
+    --prod-surface: #ffffff;
+    --prod-field-bg: #f8fafc;
+    --prod-border: #e2e8f0;
+    --prod-border-strong: #cbd5e1;
+    --prod-border-hover: #6366f1;
+    --prod-text: #0f172a;
+    --prod-text-strong: #020617;
+    --prod-text-soft: #334155;
+    --prod-muted: #64748b;
+    --prod-subtle: #94a3b8;
+    --prod-violet: #6366f1;
+    --prod-violet-strong: #4f46e5;
+    --prod-violet-light: #4338ca;
+    --prod-cyan: #0284c7;
+    --prod-success: #059669;
+    --prod-warning: #d97706;
+    --prod-danger: #dc2626;
+    --prod-gradient: linear-gradient(135deg, #6366f1, #0891b2);
+    color-scheme: light;
+    color: var(--prod-text);
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-modal,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-confirmacao-modal {
+    --prod-surface: #ffffff;
+    --prod-field-bg: #f8fafc;
+    --prod-border: #e2e8f0;
+    --prod-border-strong: #cbd5e1;
+    --prod-border-hover: #6366f1;
+    --prod-text: #0f172a;
+    --prod-text-strong: #020617;
+    --prod-text-soft: #334155;
+    --prod-muted: #64748b;
+    --prod-subtle: #64748b;
+    --prod-violet: #6366f1;
+    --prod-violet-strong: #4f46e5;
+    --prod-violet-light: #4338ca;
+    --prod-cyan: #0284c7;
+    --prod-success: #059669;
+    --prod-warning: #d97706;
+    --prod-danger: #dc2626;
+    --prod-gradient: linear-gradient(135deg, #6366f1, #0891b2);
+    color-scheme: light;
+    color: var(--prod-text);
+    background: #fff;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-confirmacao-icone {
+    color: #b45309;
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-confirmacao-modal .produtos-btn-danger {
+    --prod-danger: #b91c1c;
+    --btn-bg: #fef2f2;
+    --btn-bg-hover: #fee2e2;
+    --btn-border: #fecaca;
+    --btn-border-hover: #fca5a5;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-card,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produto-card-item,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produto-indicador {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-table th {
+    background: #f8fafc;
+    color: #64748b;
+    border-bottom-color: #e2e8f0;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-table td {
+    border-bottom-color: #f1f5f9;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-table tr:hover td {
+    background: #f8fafc;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-page input,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-modal input,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-page select,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-modal select,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-page textarea,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-modal textarea {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-page select option {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-modal select option {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-btn:not(.produtos-btn-primary):not(.produtos-btn-danger) {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produtos-btn:not(.produtos-btn-primary):not(.produtos-btn-danger):hover {
+    background: #e2e8f0;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produto-card-status {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .produto-card-imagem {
+    background: #f1f5f9;
 }

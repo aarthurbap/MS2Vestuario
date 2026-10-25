@@ -7,6 +7,7 @@ import { produtoRoutes } from "./routes/produtoRoutes";
 import { clienteRoutes } from "./routes/clienteRoutes";
 import { usuarioRoutes } from "./routes/usuarioRoutes";
 import { vendaRoutes } from "./routes/vendaRoutes";
+import relatorioRoutes from "./routes/relatorioRoutes";
 
 // ======================================================
 // CONFIGURAÇÃO - Servidor Express
@@ -14,6 +15,7 @@ import { vendaRoutes } from "./routes/vendaRoutes";
 
 const app = express();
 
+// Define a porta configurada no ambiente ou usa 3000 como padrao.
 const PORT = Number(process.env.PORT) || 3000;
 
 // ======================================================
@@ -58,6 +60,7 @@ app.use(express.json());
 // ROTA PRINCIPAL - Verificar funcionamento da API
 // ======================================================
 
+// Disponibiliza uma resposta simples para confirmar que a API esta ativa.
 app.get("/", (req, res) => {
     res.status(200).json({
         nome: "MS² Vestuário API",
@@ -70,30 +73,38 @@ app.get("/", (req, res) => {
 // ROTAS - Produtos
 // ======================================================
 
+// Encaminha as requisicoes de /produtos para o roteador de produtos.
 app.use("/produtos", produtoRoutes);
 
 // ======================================================
 // ROTAS - Clientes
 // ======================================================
 
+// Encaminha as requisicoes de /clientes para o roteador de clientes.
 app.use("/clientes", clienteRoutes);
 
 // ======================================================
 // ROTAS - Usuários e autenticação
 // ======================================================
 
+// Encaminha as requisicoes de /usuarios para cadastro e autenticacao.
 app.use("/usuarios", usuarioRoutes);
 
 // ======================================================
 // ROTAS - Vendas
 // ======================================================
 
+// Encaminha as requisicoes de /vendas para o roteador de vendas.
 app.use("/vendas", vendaRoutes);
+
+// Relatórios dependem de dados de vendas e exigem autenticação.
+app.use("/relatorios", relatorioRoutes);
 
 // ======================================================
 // INICIALIZAÇÃO - Servidor
 // ======================================================
 
+// Inicia o servidor HTTP e informa no console o endereco de acesso.
 app.listen(PORT, () => {
     console.log("");
     console.log("========================================");

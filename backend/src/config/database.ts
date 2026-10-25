@@ -1,6 +1,8 @@
 import mysql from "mysql2/promise";
 import "dotenv/config";
 
+// Cria o pool de conexões MySQL usando as variáveis definidas no ambiente.
+// O pool permite reutilizar conexões e limita a quantidade simultânea.
 export const database = mysql.createPool({
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
@@ -12,3 +14,6 @@ export const database = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0
 });
+
+// Mantém o nome pool como um alias para compatibilidade com outros módulos.
+export const pool = database;

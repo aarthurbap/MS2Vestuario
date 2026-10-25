@@ -1,0 +1,443 @@
+/* =========================================================
+   MS² VESTUÁRIO — HISTÓRICO E GESTÃO DE VENDAS
+   Visual Dark & Light Premium • Responsivo • Dados Reais
+   ========================================================= */
+
+.vendas-page {
+    --vendas-bg: var(--dash-bg, #080d18);
+    --vendas-panel: var(--dash-panel-solid, #101729);
+    --vendas-panel-subtle: rgba(16, 23, 41, 0.6);
+    --vendas-border: var(--dash-border, rgba(148, 163, 184, 0.14));
+    --vendas-border-strong: var(--dash-border-strong, rgba(148, 163, 184, 0.22));
+    --vendas-text: var(--dash-text, #eef2ff);
+    --vendas-muted: var(--dash-muted, #94a3b8);
+    --vendas-primary: #818cf8;
+    --vendas-primary-strong: #6366f1;
+    --vendas-cyan: #38bdf8;
+    --vendas-success: #34d399;
+    --vendas-danger: #f87171;
+
+    width: 100%;
+    max-width: 1680px;
+    margin: 0 auto;
+    padding: clamp(16px, 2.5vw, 32px);
+    color: var(--vendas-text);
+    box-sizing: border-box;
+}
+
+/* Suporte completo ao Modo Claro */
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .theme-light) .vendas-page {
+    --vendas-bg: #f8fafc;
+    --vendas-panel: #ffffff;
+    --vendas-panel-subtle: #f1f5f9;
+    --vendas-border: #e2e8f0;
+    --vendas-border-strong: #cbd5e1;
+    --vendas-text: #0f172a;
+    --vendas-muted: #64748b;
+    --vendas-primary: #6366f1;
+    --vendas-primary-strong: #4f46e5;
+    --vendas-cyan: #0284c7;
+    --vendas-success: #059669;
+    --vendas-danger: #dc2626;
+}
+
+/* Header */
+.vendas-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+    padding: clamp(20px, 2.6vw, 28px);
+    border: 1px solid var(--vendas-border-strong);
+    border-radius: 20px;
+    background:
+        radial-gradient(ellipse at 90% 0%, rgba(99, 102, 241, 0.18), transparent 45%),
+        var(--vendas-panel);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.vendas-hero h1 {
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+}
+
+.vendas-hero p {
+    color: var(--vendas-muted);
+    font-size: 0.92rem;
+    max-width: 580px;
+    margin: 0;
+}
+
+/* Cards de Indicadores */
+.vendas-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.vendas-metric-card {
+    padding: 20px;
+    border-radius: 16px;
+    background: var(--vendas-panel);
+    border: 1px solid var(--vendas-border);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.vendas-metric-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--vendas-primary);
+}
+
+.vendas-metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--vendas-primary);
+    flex-shrink: 0;
+}
+
+.vendas-metric-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.vendas-metric-label {
+    font-size: 0.8rem;
+    color: var(--vendas-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.vendas-metric-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-top: 2px;
+}
+
+/* Área de Filtros */
+.vendas-filters-panel {
+    background: var(--vendas-panel);
+    border: 1px solid var(--vendas-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.vendas-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    align-items: end;
+}
+
+.vendas-filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vendas-filter-item label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--vendas-muted);
+}
+
+.vendas-filter-item input,
+.vendas-filter-item select {
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid var(--vendas-border-strong);
+    background: var(--vendas-panel-subtle);
+    color: var(--vendas-text);
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.vendas-filter-item input:focus,
+.vendas-filter-item select:focus {
+    border-color: var(--vendas-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Tabela de Vendas */
+.vendas-table-container {
+    background: var(--vendas-panel);
+    border: 1px solid var(--vendas-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+}
+
+.vendas-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.vendas-table th {
+    padding: 14px 16px;
+    background: var(--vendas-panel-subtle);
+    color: var(--vendas-muted);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--vendas-border);
+    cursor: pointer;
+    user-select: none;
+}
+
+.vendas-table th:hover {
+    color: var(--vendas-primary);
+}
+
+.vendas-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--vendas-border);
+    vertical-align: middle;
+}
+
+.vendas-table tr:hover td {
+    background: rgba(99, 102, 241, 0.04);
+}
+
+.vendas-id-pill {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--vendas-primary);
+    font-weight: 750;
+    font-family: monospace;
+    font-size: 0.86rem;
+}
+
+.vendas-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.vendas-status-finalizada {
+    background: rgba(52, 211, 153, 0.14);
+    color: var(--vendas-success);
+    border: 1px solid rgba(52, 211, 153, 0.28);
+}
+
+.vendas-status-cancelada {
+    background: rgba(248, 113, 113, 0.14);
+    color: var(--vendas-danger);
+    border: 1px solid rgba(248, 113, 113, 0.28);
+}
+
+.vendas-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid var(--vendas-border-strong);
+    background: var(--vendas-panel-subtle);
+    color: var(--vendas-text);
+    transition: all 0.15s ease;
+}
+
+.vendas-action-btn:hover {
+    border-color: var(--vendas-primary);
+    color: var(--vendas-primary);
+    background: rgba(99, 102, 241, 0.08);
+}
+
+/* Paginação */
+.vendas-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-top: 1px solid var(--vendas-border);
+    font-size: 0.88rem;
+    color: var(--vendas-muted);
+}
+
+.vendas-pagination-btns {
+    display: flex;
+    gap: 6px;
+}
+
+.vendas-page-btn {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--vendas-border);
+    background: var(--vendas-panel-subtle);
+    color: var(--vendas-text);
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.15s ease;
+}
+
+.vendas-page-btn.is-active {
+    background: var(--vendas-primary);
+    color: #ffffff;
+    border-color: var(--vendas-primary);
+}
+
+.vendas-page-btn:hover:not(:disabled):not(.is-active) {
+    border-color: var(--vendas-primary);
+}
+
+.vendas-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Modal de Detalhes */
+.vendas-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(5, 10, 24, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.vendas-modal-dialog {
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--vendas-panel);
+    border: 1px solid var(--vendas-border-strong);
+    border-radius: 18px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+}
+
+.vendas-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--vendas-border);
+}
+
+.vendas-modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.vendas-modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.vendas-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--vendas-panel-subtle);
+    border: 1px solid var(--vendas-border);
+}
+
+.vendas-detail-row {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.88rem;
+}
+
+.vendas-detail-row span:first-child {
+    color: var(--vendas-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.vendas-detail-row strong {
+    margin-top: 2px;
+    font-size: 0.95rem;
+}
+
+.vendas-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 0.88rem;
+}
+
+.vendas-items-table th {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--vendas-border);
+    color: var(--vendas-muted);
+    font-size: 0.78rem;
+    text-align: left;
+}
+
+.vendas-items-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--vendas-border);
+}
+
+.vendas-items-table .text-right {
+    text-align: right;
+}
+
+.vendas-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--vendas-border);
+}
+
+/* Responsividade */
+@media (max-width: 900px) {
+    .vendas-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .vendas-table-container {
+        overflow-x: auto;
+    }
+}
+

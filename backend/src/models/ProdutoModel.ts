@@ -2,6 +2,7 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { database } from "../config/database";
 import { Produto } from "../types/produto";
 
+// Representa uma linha de produto retornada pelo MySQL.
 interface ProdutoRow extends RowDataPacket {
     id: number;
     codigo: string;
@@ -13,7 +14,9 @@ interface ProdutoRow extends RowDataPacket {
     categoria_id: number | null;
 }
 
+// Centraliza as consultas e alteracoes da tabela de produtos.
 export class ProdutoModel {
+    // Insere um produto e devolve o ID gerado pelo banco.
     static async create(
         produto: Omit<Produto, "id">
     ): Promise<number> {
@@ -44,6 +47,7 @@ export class ProdutoModel {
         return result.insertId;
     }
 
+    // Busca um produto pelo ID e converte campos numericos e booleanos.
     static async findById(
         id: number
     ): Promise<Produto | null> {
@@ -80,6 +84,7 @@ export class ProdutoModel {
         };
     }
 
+    // Lista os produtos cadastrados e normaliza os tipos retornados pelo MySQL.
     static async findAll(): Promise<Produto[]> {
         const [rows] = await database.execute<ProdutoRow[]>(
             `
@@ -108,6 +113,7 @@ export class ProdutoModel {
         }));
     }
 
+    // Atualiza os dados do produto e informa se alguma linha foi afetada.
     static async update(
         id: number,
         produto: Omit<Produto, "id">
@@ -140,6 +146,7 @@ export class ProdutoModel {
         return result.affectedRows > 0;
     }
 
+    // Marca o produto como inativo sem excluir seus dados do banco.
     static async deactivate(id: number): Promise<boolean> {
         const [result] = await database.execute<ResultSetHeader>(
             `

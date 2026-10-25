@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 
 import { VendaController } from "../controllers/VendaController";
@@ -21,22 +20,29 @@ vendaRoutes.use(authMiddleware);
 // ROTAS - Vendas
 // ======================================================
 
-// Registra uma nova venda.
-// Permitido para usuários autenticados (caixa ou gerente).
+// Lista as formas de pagamento disponíveis
+// Consulta as formas ativas para preenchimento das opções de venda.
+vendaRoutes.get(
+    "/formas-pagamento",
+    VendaController.getFormasPagamento
+);
+
+// Registra uma nova venda de forma atômica
+// Cria uma venda completa usando o operador identificado pelo JWT.
 vendaRoutes.post(
     "/",
     VendaController.create
 );
 
-// Lista as vendas cadastradas.
-// Permitido para usuários autenticados.
+// Lista as vendas cadastradas com suporte a filtros
+// Retorna o histórico de vendas conforme os filtros enviados na consulta.
 vendaRoutes.get(
     "/",
     VendaController.findAll
 );
 
-// Busca uma venda específica pelo ID.
-// Permitido para usuários autenticados.
+// Busca uma venda específica pelo ID com itens e pagamentos
+// Retorna os dados completos de uma venda identificada pelo ID.
 vendaRoutes.get(
     "/:id",
     VendaController.findById

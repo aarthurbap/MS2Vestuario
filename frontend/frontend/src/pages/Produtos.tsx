@@ -6,6 +6,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { apiFetch } from "../../src/services/api";
 import type { Produto } from "../../src/types/produtos";
 import "./Produtos.css";
@@ -33,6 +34,7 @@ type FiltroEstoque =
   | "esgotados"
   | "inativos";
 type StatusClasse = "disponivel" | "baixo" | "esgotado" | "inativo";
+type CampoProduto = "codigo" | "nome" | "estoque" | "preco";
 
 const ESTOQUE_MINIMO = 5;
 const TEMPO_MENSAGEM_MS = 4500;
@@ -45,6 +47,27 @@ const numero = new Intl.NumberFormat("pt-BR");
 
 function formatarMoeda(valor: number) {
   return moeda.format(Number.isFinite(valor) ? valor : 0);
+}
+
+function formatarPrecoInput(valor: number): string {
+  const centavos = Math.max(0, Math.round((Number.isFinite(valor) ? valor : 0) * 100));
+  return (centavos / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function mascaraPreco(valor: string): string {
+  const digitos = valor.replace(/\D/g, "").slice(0, 12);
+  const centavos = Number(digitos || "0");
+  return (centavos / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function converterPreco(valor: string): number {
+  return Number(valor.replace(/\./g, "").replace(",", "."));
 }
 
 /* Imagens padrão das roupas (coloque a pasta "produtos" dentro de /public) */
@@ -106,7 +129,14 @@ function Produtos() {
   const [produtos, setProdutos] = useState<ProdutoVisual[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [desativando, setDesativando] = useState(false);
   const [formAberto, setFormAberto] = useState(false);
+  const [produtoParaDesativar, setProdutoParaDesativar] =
+    useState<ProdutoVisual | null>(null);
+  const [precoTexto, setPrecoTexto] = useState("0,00");
+  const [ativoSelecionado, setAtivoSelecionado] = useState(true);
+  const [formAlterado, setFormAlterado] = useState(false);
+  const [errosCampos, setErrosCampos] = useState<Partial<Record<CampoProduto, string>>>({});
   const [produtoEditando, setProdutoEditando] = useState<ProdutoVisual | null>(
     null,
   );
@@ -116,13 +146,18 @@ function Produtos() {
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
 
-  const editorRef = useRef<HTMLElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const confirmacaoRef = useRef<HTMLDivElement>(null);
+  const botaoCadastroRef = useRef<HTMLButtonElement>(null);
+  const confirmarDesativacaoRef = useRef<HTMLButtonElement>(null);
+  const desativandoRef = useRef(false);
+  const fecharFormularioRef = useRef<() => void>(() => undefined);
 
   const carregarProdutos = useCallback(async () => {
-    setCarregando(true);
     try {
       const resposta = await apiFetch<{ dados: ProdutoVisual[] }>("/produtos");
       setProdutos(Array.isArray(resposta.dados) ? resposta.dados : []);
+      setErro("");
     } catch (error) {
       setErro(mensagemDeErro(error, "Não foi possível carregar os produtos."));
     } finally {
@@ -131,8 +166,22 @@ function Produtos() {
   }, []);
 
   useEffect(() => {
-    void carregarProdutos();
-  }, [carregarProdutos]);
+    let vigente = true;
+    apiFetch<{ dados: ProdutoVisual[] }>("/produtos")
+      .then((resposta) => {
+        if (vigente) {
+          setProdutos(Array.isArray(resposta.dados) ? resposta.dados : []);
+          setErro("");
+        }
+      })
+      .catch((error: unknown) => {
+        if (vigente) setErro(mensagemDeErro(error, "Não foi possível carregar os produtos."));
+      })
+      .finally(() => {
+        if (vigente) setCarregando(false);
+      });
+    return () => { vigente = false; };
+  }, []);
 
   // Mensagem de sucesso some sozinha
   useEffect(() => {
@@ -141,23 +190,90 @@ function Produtos() {
     return () => window.clearTimeout(timer);
   }, [mensagem]);
 
-  // Ao abrir o formulário: rola até ele, foca o primeiro campo e permite fechar com Esc
+  // Ao abrir o formulário, move o foco para o modal e mantém a navegação por teclado dentro dele.
   useEffect(() => {
     if (!formAberto) return;
 
-    editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    editorRef.current
-      ?.querySelector<HTMLInputElement>("input")
-      ?.focus({ preventScroll: true });
+    const focoAnterior = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : botaoCadastroRef.current;
+    editorRef.current?.querySelector<HTMLInputElement>("input")?.focus();
+
+    const rolagemAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     function aoPressionar(event: KeyboardEvent) {
-      if (event.key === "Escape") fecharFormulario();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        fecharFormularioRef.current();
+        return;
+      }
+      if (event.key !== "Tab" || !editorRef.current) return;
+
+      const elementos = Array.from(editorRef.current.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
+      ));
+      if (elementos.length === 0) return;
+      const primeiro = elementos[0];
+      const ultimo = elementos[elementos.length - 1];
+      if (event.shiftKey && document.activeElement === primeiro) {
+        event.preventDefault();
+        ultimo.focus();
+      } else if (!event.shiftKey && document.activeElement === ultimo) {
+        event.preventDefault();
+        primeiro.focus();
+      }
     }
 
     window.addEventListener("keydown", aoPressionar);
-    return () => window.removeEventListener("keydown", aoPressionar);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formAberto, produtoEditando]);
+    return () => {
+      window.removeEventListener("keydown", aoPressionar);
+      document.body.style.overflow = rolagemAnterior;
+      focoAnterior?.focus();
+    };
+  }, [formAberto]);
+
+  useEffect(() => {
+    if (!produtoParaDesativar) return;
+
+    const focoAnterior = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    confirmarDesativacaoRef.current?.focus();
+
+    const rolagemAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function aoPressionar(event: KeyboardEvent) {
+      if (event.key === "Escape" && !desativandoRef.current) {
+        event.preventDefault();
+        setProdutoParaDesativar(null);
+        return;
+      }
+      if (event.key !== "Tab" || !confirmacaoRef.current) return;
+
+      const elementos = Array.from(confirmacaoRef.current.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), [tabindex]:not([tabindex="-1"])',
+      ));
+      if (elementos.length === 0) return;
+      const primeiro = elementos[0];
+      const ultimo = elementos[elementos.length - 1];
+      if (event.shiftKey && document.activeElement === primeiro) {
+        event.preventDefault();
+        ultimo.focus();
+      } else if (!event.shiftKey && document.activeElement === ultimo) {
+        event.preventDefault();
+        primeiro.focus();
+      }
+    }
+
+    window.addEventListener("keydown", aoPressionar);
+    return () => {
+      window.removeEventListener("keydown", aoPressionar);
+      document.body.style.overflow = rolagemAnterior;
+      focoAnterior?.focus();
+    };
+  }, [produtoParaDesativar]);
 
   const categorias = useMemo(() => {
     const mapa = new Map<string, string>();
@@ -226,6 +342,10 @@ function Produtos() {
     setProdutoEditando(null);
     setErro("");
     setMensagem("");
+    setErrosCampos({});
+    setPrecoTexto("0,00");
+    setAtivoSelecionado(true);
+    setFormAlterado(false);
     setFormAberto(true);
   }
 
@@ -233,15 +353,26 @@ function Produtos() {
     setProdutoEditando(produto);
     setErro("");
     setMensagem("");
+    setErrosCampos({});
+    setPrecoTexto(formatarPrecoInput(Number(produto.preco)));
+    setAtivoSelecionado(produto.ativo);
+    setFormAlterado(false);
     setFormAberto(true);
   }
 
   function fecharFormulario() {
     if (salvando) return;
+    if (formAlterado && !window.confirm("Descartar as alterações não salvas?")) return;
     setFormAberto(false);
     setProdutoEditando(null);
     setErro("");
+    setErrosCampos({});
+    setFormAlterado(false);
   }
+
+  useEffect(() => {
+    fecharFormularioRef.current = fecharFormulario;
+  });
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -251,15 +382,22 @@ function Produtos() {
     const nome = String(dados.get("nome") ?? "").trim();
     const descricao = String(dados.get("descricao") ?? "").trim();
     const estoque = Number(dados.get("estoque"));
-    const preco = Number(String(dados.get("preco") ?? "").replace(",", "."));
+    const preco = converterPreco(precoTexto);
     const categoriaTexto = String(dados.get("categoriaId") ?? "");
-    const ativo = dados.get("ativo") === "on";
+    const ativo = ativoSelecionado;
 
-    if (!codigo || !nome) return setErro("Código e nome são obrigatórios.");
+    const novosErros: Partial<Record<CampoProduto, string>> = {};
+    if (!codigo) novosErros.codigo = "Informe o código do produto.";
+    if (!nome) novosErros.nome = "Informe o nome do produto.";
     if (!Number.isInteger(estoque) || estoque < 0)
-      return setErro("Informe uma quantidade de estoque válida.");
+      novosErros.estoque = "Informe uma quantidade inteira igual ou maior que zero.";
     if (!Number.isFinite(preco) || preco < 0)
-      return setErro("Informe um preço válido.");
+      novosErros.preco = "Informe um preço válido e não negativo.";
+    setErrosCampos(novosErros);
+    if (Object.keys(novosErros).length > 0) {
+      setErro("Revise os campos destacados antes de continuar.");
+      return;
+    }
 
     const payload: ProdutoFormulario = {
       codigo,
@@ -292,29 +430,45 @@ function Produtos() {
 
       setFormAberto(false);
       setProdutoEditando(null);
+      setFormAlterado(false);
+      setCarregando(true);
       await carregarProdutos();
     } catch (error) {
-      setErro(mensagemDeErro(error, "Não foi possível salvar o produto."));
+      const mensagemErro = mensagemDeErro(error, "Não foi possível salvar o produto.");
+      const textoErro = mensagemErro.toLocaleLowerCase("pt-BR");
+      if (textoErro.includes("código")) {
+        setErrosCampos((atuais) => ({ ...atuais, codigo: mensagemErro }));
+      } else if (textoErro.includes("estoque")) {
+        setErrosCampos((atuais) => ({ ...atuais, estoque: mensagemErro }));
+      } else if (textoErro.includes("preço")) {
+        setErrosCampos((atuais) => ({ ...atuais, preco: mensagemErro }));
+      }
+      setErro(mensagemErro);
     } finally {
       setSalvando(false);
     }
   }
 
-  async function desativarProduto(produto: ProdutoVisual) {
-    const confirmar = window.confirm(
-      `Deseja realmente desativar "${produto.nome}"? O registro será preservado.`,
-    );
-    if (!confirmar) return;
-
+  async function confirmarDesativacao() {
+    if (!produtoParaDesativar || desativando) return;
+    const produto = produtoParaDesativar;
     setErro("");
     setMensagem("");
+    desativandoRef.current = true;
+    setDesativando(true);
 
     try {
       await apiFetch(`/produtos/${produto.id}/desativar`, { method: "PATCH" });
+      setProdutoParaDesativar(null);
       setMensagem(`Produto "${produto.nome}" desativado com sucesso.`);
+      setCarregando(true);
       await carregarProdutos();
     } catch (error) {
+      setProdutoParaDesativar(null);
       setErro(mensagemDeErro(error, "Não foi possível desativar o produto."));
+    } finally {
+      desativandoRef.current = false;
+      setDesativando(false);
     }
   }
 
@@ -362,6 +516,7 @@ function Produtos() {
         </div>
 
         <button
+          ref={botaoCadastroRef}
           type="button"
           className="produtos-btn produtos-btn-primary"
           onClick={abrirCadastro}
@@ -418,19 +573,31 @@ function Produtos() {
         ))}
       </div>
 
-      {formAberto && (
-        <section
-          ref={editorRef}
-          className="produtos-card produtos-editor"
-          aria-labelledby="produtos-editor-titulo"
+      {formAberto && createPortal(
+        <div
+          className="produtos-modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) fecharFormulario();
+          }}
         >
+          <section
+            ref={editorRef}
+            className="produtos-card produtos-editor produtos-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="produtos-editor-titulo"
+            aria-describedby="produtos-editor-descricao"
+          >
           <div className="produtos-card-header">
             <div>
               <h2 id="produtos-editor-titulo">
-                {produtoEditando ? "Editar produto" : "Cadastrar produto"}
+                {produtoEditando ? "Editar produto" : "Cadastrar Produto"}
               </h2>
-              <p>
-                Preencha os dados abaixo. Campos com{" "}
+              <p id="produtos-editor-descricao">
+                {produtoEditando
+                  ? "Atualize as informações do produto no catálogo."
+                  : "Preencha as informações abaixo para adicionar um novo produto ao estoque."}{" "}
+                Campos com{" "}
                 <span className="produtos-obrigatorio">*</span> são
                 obrigatórios.
               </p>
@@ -457,6 +624,16 @@ function Produtos() {
             key={produtoEditando?.id ?? "novo"}
             className="produtos-form"
             onSubmit={handleSubmit}
+            onChange={(event) => {
+              setFormAlterado(true);
+              setErro("");
+              const alvo = event.target;
+              if (!(alvo instanceof HTMLInputElement || alvo instanceof HTMLSelectElement || alvo instanceof HTMLTextAreaElement)) return;
+              const campo = alvo.name as CampoProduto;
+              if (Object.hasOwn(errosCampos, campo)) {
+                setErrosCampos((atuais) => ({ ...atuais, [campo]: undefined }));
+              }
+            }}
             noValidate
           >
             <div className="produtos-form-grid">
@@ -471,7 +648,10 @@ function Produtos() {
                   autoComplete="off"
                   defaultValue={produtoEditando?.codigo ?? ""}
                   placeholder="Ex.: CAM001"
+                  aria-invalid={Boolean(errosCampos.codigo)}
+                  aria-describedby={errosCampos.codigo ? "erro-codigo" : undefined}
                 />
+                {errosCampos.codigo && <small className="produtos-erro-campo" id="erro-codigo">{errosCampos.codigo}</small>}
               </div>
 
               <div className="produtos-field">
@@ -485,7 +665,10 @@ function Produtos() {
                   required
                   defaultValue={produtoEditando?.nome ?? ""}
                   placeholder="Ex.: Camiseta básica"
+                  aria-invalid={Boolean(errosCampos.nome)}
+                  aria-describedby={errosCampos.nome ? "erro-nome" : undefined}
                 />
+                {errosCampos.nome && <small className="produtos-erro-campo" id="erro-nome">{errosCampos.nome}</small>}
               </div>
 
               <div className="produtos-field">
@@ -502,7 +685,10 @@ function Produtos() {
                   step="1"
                   required
                   defaultValue={produtoEditando?.estoque ?? 0}
+                  aria-invalid={Boolean(errosCampos.estoque)}
+                  aria-describedby={errosCampos.estoque ? "erro-estoque" : undefined}
                 />
+                {errosCampos.estoque && <small className="produtos-erro-campo" id="erro-estoque">{errosCampos.estoque}</small>}
               </div>
 
               <div className="produtos-field">
@@ -514,15 +700,16 @@ function Produtos() {
                   <input
                     id="preco"
                     name="preco"
-                    type="number"
+                    type="text"
                     inputMode="decimal"
-                    min="0"
-                    step="0.01"
                     required
-                    defaultValue={produtoEditando?.preco ?? ""}
-                    placeholder="0,00"
+                    value={precoTexto}
+                    onChange={(event) => setPrecoTexto(mascaraPreco(event.target.value))}
+                    aria-invalid={Boolean(errosCampos.preco)}
+                    aria-describedby={errosCampos.preco ? "erro-preco" : undefined}
                   />
                 </div>
+                {errosCampos.preco && <small className="produtos-erro-campo" id="erro-preco">{errosCampos.preco}</small>}
               </div>
 
               <div className="produtos-field">
@@ -554,13 +741,22 @@ function Produtos() {
                   <input
                     type="checkbox"
                     name="ativo"
-                    defaultChecked={produtoEditando?.ativo ?? true}
+                    checked={ativoSelecionado}
+                    onChange={(event) => {
+                      setAtivoSelecionado(event.target.checked);
+                      setFormAlterado(true);
+                    }}
+                    aria-label="Disponibilidade do produto"
                   />
                   <span
                     className="produtos-checkbox-trilho"
                     aria-hidden="true"
                   />
-                  <span>Produto ativo e disponível para venda</span>
+                  <span className="produtos-disponibilidade-texto">
+                    {ativoSelecionado
+                      ? "Produto ativo e disponível para venda"
+                      : "Produto indisponível para venda"}
+                  </span>
                 </label>
               </div>
 
@@ -602,7 +798,59 @@ function Produtos() {
               </button>
             </div>
           </form>
-        </section>
+          </section>
+        </div>,
+        document.body,
+      )}
+
+      {produtoParaDesativar && createPortal(
+        <div
+          className="produtos-modal-overlay produtos-confirmacao-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !desativando) {
+              setProdutoParaDesativar(null);
+            }
+          }}
+        >
+          <section
+            ref={confirmacaoRef}
+            className="produtos-card produtos-confirmacao-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="produtos-confirmacao-titulo"
+            aria-describedby="produtos-confirmacao-descricao"
+          >
+            <div className="produtos-confirmacao-icone" aria-hidden="true">!</div>
+            <h2 id="produtos-confirmacao-titulo">Desativar produto?</h2>
+            <p id="produtos-confirmacao-descricao">
+              Tem certeza que deseja desativar{" "}
+              <strong>{produtoParaDesativar.nome}</strong>? O produto ficará
+              indisponível para venda, mas o registro será preservado.
+            </p>
+            <div className="produtos-confirmacao-acoes">
+              <button
+                type="button"
+                className="produtos-btn produtos-btn-secondary"
+                onClick={() => setProdutoParaDesativar(null)}
+                disabled={desativando}
+              >
+                Cancelar
+              </button>
+              <button
+                ref={confirmarDesativacaoRef}
+                type="button"
+                className="produtos-btn produtos-btn-danger"
+                onClick={() => void confirmarDesativacao()}
+                disabled={desativando}
+                aria-busy={desativando}
+              >
+                {desativando && <span className="produtos-spinner" aria-hidden="true" />}
+                {desativando ? "Desativando..." : "Sim, desativar"}
+              </button>
+            </div>
+          </section>
+        </div>,
+        document.body,
       )}
 
       <section className="produtos-card">
@@ -781,7 +1029,7 @@ function Produtos() {
                         <button
                           type="button"
                           className="produtos-btn produtos-btn-danger"
-                          onClick={() => void desativarProduto(produto)}
+                          onClick={() => setProdutoParaDesativar(produto)}
                           aria-label={`Desativar ${produto.nome}`}
                         >
                           Desativar

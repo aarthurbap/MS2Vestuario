@@ -2,13 +2,16 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { database } from "../config/database";
 import { FormaPagamento } from "../types/formaPagamento";
 
+// Representa uma forma de pagamento como ela e retornada pelo MySQL.
 interface FormaPagamentoRow extends RowDataPacket {
     id: number;
     nome: string;
     ativo: number | boolean;
 }
 
+// Centraliza as consultas e alteracoes das formas de pagamento.
 export class FormaPagamentoModel {
+    // Insere uma forma de pagamento e devolve o ID gerado.
     static async create(
         formaPagamento: Omit<FormaPagamento, "id">
     ): Promise<number> {
@@ -29,6 +32,7 @@ export class FormaPagamentoModel {
         return result.insertId;
     }
 
+    // Busca uma forma de pagamento pelo ID e normaliza o campo ativo para boolean.
     static async findById(
         id: number
     ): Promise<FormaPagamento | null> {
@@ -55,6 +59,7 @@ export class FormaPagamentoModel {
         };
     }
 
+    // Consulta todas as formas e converte os valores de ativo para boolean.
     static async findAll(): Promise<FormaPagamento[]> {
         const [rows] = await database.execute<FormaPagamentoRow[]>(
             `
@@ -73,6 +78,7 @@ export class FormaPagamentoModel {
         }));
     }
 
+    // Atualiza nome e situacao de uma forma de pagamento.
     static async update(
         id: number,
         formaPagamento: Omit<FormaPagamento, "id">
@@ -95,6 +101,7 @@ export class FormaPagamentoModel {
         return result.affectedRows > 0;
     }
 
+    // Remove uma forma de pagamento e informa se houve exclusao.
     static async delete(
         id: number
     ): Promise<boolean> {

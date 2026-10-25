@@ -2,6 +2,7 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { database } from "../config/database";
 import { Cliente } from "../types/cliente";
 
+// Representa uma linha de cliente retornada pelo MySQL.
 interface ClienteRow extends RowDataPacket {
     id: number;
     nome: string;
@@ -10,7 +11,9 @@ interface ClienteRow extends RowDataPacket {
     email: string | null;
 }
 
+// Centraliza as consultas e alteracoes da tabela de clientes.
 export class ClienteModel {
+    // Insere um cliente e devolve o ID gerado pelo banco.
     static async create(
         cliente: Omit<Cliente, "id">
     ): Promise<number> {
@@ -35,6 +38,7 @@ export class ClienteModel {
         return result.insertId;
     }
 
+    // Busca um cliente pelo ID ou retorna null quando nao existe.
     static async findById(
         id: number
     ): Promise<Cliente | null> {
@@ -65,6 +69,7 @@ export class ClienteModel {
         };
     }
 
+    // Consulta todos os clientes e converte as linhas para o tipo da aplicacao.
     static async findAll(): Promise<Cliente[]> {
         const [rows] = await database.execute<ClienteRow[]>(
             `
@@ -87,6 +92,7 @@ export class ClienteModel {
         }));
     }
 
+    // Atualiza os dados pessoais do cliente e informa se alguma linha foi afetada.
     static async update(
         id: number,
         cliente: Omit<Cliente, "id">
@@ -113,6 +119,7 @@ export class ClienteModel {
         return result.affectedRows > 0;
     }
 
+    // Remove um cliente e informa se alguma linha foi excluida.
     static async delete(
         id: number
     ): Promise<boolean> {

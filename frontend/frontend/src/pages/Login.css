@@ -575,6 +575,32 @@
   }
 }
 
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-security-note {
+  color: #4338ca;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-security-note p {
+  color: #475569;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-back {
+  color: #4338ca;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-back span {
+  color: #64748b;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-field input:-webkit-autofill,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-field input:-webkit-autofill:hover,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0f172a;
+  caret-color: #0f172a;
+  box-shadow: 0 0 0 1000px #fff inset;
+}
+
 /* =========================================================
    LOGIN — acabamento visual e cadastro em modal
    ========================================================= */
@@ -943,6 +969,78 @@
 .login-modal-field input:disabled {
   opacity: 0.6;
   cursor: wait;
+}
+
+/* Tema claro aplicado aos formulários de entrada e cadastro. */
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-page {
+  --login-bg: #f4f6fb;
+  --login-surface: rgba(255, 255, 255, 0.96);
+  --login-border: #dce3ef;
+  --login-text: #0f172a;
+  --login-muted: #64748b;
+  --login-primary: #4f46e5;
+  --login-primary-hover: #4338ca;
+  --login-cyan: #0284c7;
+  color-scheme: light;
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(79, 70, 229, 0.08), transparent 42%),
+    radial-gradient(ellipse at 85% 80%, rgba(6, 182, 212, 0.07), transparent 38%),
+    #f4f6fb;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-card,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal {
+  color: #0f172a;
+  background: #fff;
+  border-color: #dce3ef;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.12);
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-form label,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-field {
+  color: #334155;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-form input:not([type="checkbox"]):not([type="radio"]),
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-form select,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-form textarea,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-field input {
+  color: #0f172a;
+  background: #fff;
+  border-color: #cbd5e1;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-form input::placeholder,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-form textarea::placeholder,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-field input::placeholder {
+  color: #64748b;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-form input:focus,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-form select:focus,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-form textarea:focus,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-field input:focus {
+  background: #fff;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-form select option {
+  color: #0f172a;
+  background: #fff;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-header h2 {
+  color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-header p,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-legal-note {
+  color: #64748b;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"]) .login-modal-close {
+  color: #475569;
+  background: #f1f5f9;
+  border-color: #dce3ef;
 }
 
 .login-modal-security-note {

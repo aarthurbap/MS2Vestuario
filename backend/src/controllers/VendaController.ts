@@ -1,33 +1,48 @@
-
 import type { Request, Response } from "express";
 
 import { ClienteModel } from "../models/ClienteModel";
 import { ProdutoModel } from "../models/ProdutoModel";
 import { VendaModel } from "../models/VendaModel";
-import { ItemVendaModel } from "../models/ItemVendaModel";
+import { FormaPagamentoModel } from "../models/FormaPagamentoModel";
 
-import type { ItemVendaCriacao } from "../types/venda";
+import type { ItemVendaCriacao, PagamentoCriacao } from "../types/venda";
 import type { UsuarioAutenticado } from "../types/auth";
 
-// ======================================================
-// TIPO - Item recebido na requisição de venda
-// ======================================================
-
 type ItemVendaRequest = {
+    // Identificador do produto que sera incluido na venda.
     produtoId: number;
+    // Quantidade solicitada para o produto.
     quantidade: number;
 };
 
-// ======================================================
-// CONTROLLER - Vendas
-// ======================================================
+type PagamentoRequest = {
+    // Identificador da forma de pagamento cadastrada.
+    formaPagamentoId: number;
+    // Valor pago por esta forma de pagamento.
+    valor: number;
+};
+
+// Converte nomes comuns de formas de pagamento nos identificadores usados no banco.
+const MAPA_FORMAS_TEXTO: Record<string, number> = {
+    dinheiro: 1,
+    pix: 2,
+    credito: 3,
+    cartao_credito: 3,
+    "cartão de crédito": 3,
+    debito: 4,
+    cartao_debito: 4,
+    "cartão de débito": 4,
+    boleto: 5,
+    "boleto bancário": 5
+};
 
 export class VendaController {
 
     // ==================================================
-    // CREATE - Registrar uma nova venda
+    // CREATE - Registrar uma nova venda de forma atômica
     // ==================================================
 
+    // Valida cliente, itens, estoque e pagamentos antes de registrar a venda.
     static async create(
         req: Request,
         res: Response
@@ -36,97 +51,70 @@ export class VendaController {
             const {
                 clienteId,
                 desconto = 0,
-                itens
+                itens,
+                pagamentos,
+                formaPagamento,
+                formaPagamentoId,
+                valorRecebido
             } = req.body ?? {};
 
-            // ==========================================
-            // Identificação do funcionário autenticado
-            // ==========================================
+            // 1. Identificação do funcionário autenticado via JWT
+            const usuario = res.locals.usuario as UsuarioAutenticado | undefined;
 
-            // O usuário vem do JWT validado pelo
-            // authMiddleware, não do corpo da requisição.
-            const usuario = res.locals.usuario as
-                UsuarioAutenticado | undefined;
-
-            if (!usuario) {
+            if (!usuario || !Number.isInteger(usuario.id) || usuario.id <= 0) {
                 res.status(401).json({
                     erro: "Usuário não autenticado."
                 });
-
                 return;
             }
 
             const usuarioId = usuario.id;
 
-            // ==========================================
-            // Validação dos dados principais
-            // ==========================================
-
-            if (
-                !Number.isInteger(clienteId) ||
-                clienteId <= 0
-            ) {
+            // 2. Validação dos itens da venda
+            if (!Array.isArray(itens) || itens.length === 0) {
                 res.status(400).json({
-                    erro: "ID do cliente inválido."
+                    erro: "A venda deve possuir pelo menos um produto."
                 });
-
                 return;
             }
 
-            if (
-                !Array.isArray(itens) ||
-                itens.length === 0
-            ) {
+            // 3. Validação do desconto
+            const descontoNum = Number(desconto);
+            if (!Number.isFinite(descontoNum) || descontoNum < 0) {
                 res.status(400).json({
-                    erro: "A venda deve possuir pelo menos um item."
+                    erro: "O valor de desconto informado é inválido."
                 });
-
                 return;
             }
 
-            if (
-                typeof desconto !== "number" ||
-                !Number.isFinite(desconto) ||
-                desconto < 0
-            ) {
-                res.status(400).json({
-                    erro: "O desconto informado é inválido."
-                });
+            // 4. Validação do cliente (opcional: aceita NULL para Consumidor não identificado)
+            let idClienteFinal: number | null = null;
+            if (clienteId !== undefined && clienteId !== null && clienteId !== "" && Number(clienteId) > 0) {
+                const idNum = Number(clienteId);
+                if (!Number.isInteger(idNum) || idNum <= 0) {
+                    res.status(400).json({
+                        erro: "ID do cliente inválido."
+                    });
+                    return;
+                }
 
-                return;
+                const cliente = await ClienteModel.findById(idNum);
+                if (!cliente) {
+                    res.status(404).json({
+                        erro: "Cliente informado não foi encontrado."
+                    });
+                    return;
+                }
+
+                idClienteFinal = idNum;
             }
 
-            // ==========================================
-            // Validação do cliente
-            // ==========================================
-
-            const cliente = await ClienteModel.findById(
-                clienteId
-            );
-
-            if (!cliente) {
-                res.status(404).json({
-                    erro: "Cliente não encontrado."
-                });
-
-                return;
-            }
-
-            // ==========================================
-            // Validação dos itens da venda
-            // ==========================================
-
+            // 5. Validação dos produtos e cálculo do subtotal
             let subtotal = 0;
-
             const itensVenda: ItemVendaCriacao[] = [];
-
-            // Impede que o mesmo produto seja informado
-            // mais de uma vez na mesma venda.
             const produtosAdicionados = new Set<number>();
 
             for (const item of itens as ItemVendaRequest[]) {
-
-                // Valida a estrutura de cada item recebido.
                 if (
                     !item ||
                     typeof item !== "object" ||
@@ -134,162 +122,207 @@ export class VendaController {
                     item.produtoId <= 0
                 ) {
                     res.status(400).json({
-                        erro: "Existe um produto com ID inválido na venda."
+                        erro: "Existe um produto com identificador inválido na venda."
                     });
-
                     return;
                 }
 
-                if (
-                    !Number.isInteger(item.quantidade) ||
-                    item.quantidade <= 0
-                ) {
+                const qtd = Number(item.quantidade);
+                if (!Number.isInteger(qtd) || qtd <= 0) {
                     res.status(400).json({
-                        erro: "A quantidade dos produtos deve ser maior que zero."
+                        erro: "A quantidade de cada produto deve ser maior que zero."
                     });
-
                     return;
                 }
 
-                // Verifica se o produto já foi adicionado.
                 if (produtosAdicionados.has(item.produtoId)) {
                     res.status(400).json({
-                        erro: "O mesmo produto não pode ser informado mais de uma vez na venda."
+                        erro: "O mesmo produto não pode ser informado mais de uma vez na mesma venda."
                     });
-
                     return;
                 }
 
                 produtosAdicionados.add(item.produtoId);
 
-                // Busca o produto no banco de dados.
-                const produto = await ProdutoModel.findById(
-                    item.produtoId
-                );
+                // Consulta preço e estoque real no banco de dados
+                const produto = await ProdutoModel.findById(item.produtoId);
 
                 if (!produto) {
                     res.status(404).json({
-                        erro: `Produto ${item.produtoId} não encontrado.`
+                        erro: `Produto com ID ${item.produtoId} não encontrado no catálogo.`
                     });
-
                     return;
                 }
 
-                // Impede a venda de produtos desativados.
                 if (!produto.ativo) {
                     res.status(400).json({
-                        erro: `O produto "${produto.nome}" está desativado.`
+                        erro: `O produto "${produto.nome}" está desativado para vendas.`
                     });
-
                     return;
                 }
 
-                // Verifica a disponibilidade em estoque.
-                if (produto.estoque < item.quantidade) {
+                if (produto.estoque < qtd) {
                     res.status(400).json({
-                        erro: `Estoque insuficiente para o produto "${produto.nome}".`
+                        erro: `Estoque insuficiente para o produto "${produto.nome}". Disponível: ${produto.estoque}, solicitado: ${qtd}.`
                     });
-
                     return;
                 }
 
-                // Utiliza o preço registrado no banco,
-                // sem confiar em valores enviados pelo frontend.
-                const subtotalItem =
-                    produto.preco * item.quantidade;
-
-                subtotal += subtotalItem;
+                const preco = Number(produto.preco);
+                subtotal += Number((preco * qtd).toFixed(2));
 
                 itensVenda.push({
                     produtoId: produto.id,
-                    quantidade: item.quantidade,
-                    precoUnitario: produto.preco
+                    quantidade: qtd,
+                    precoUnitario: preco
                 });
             }
 
             subtotal = Number(subtotal.toFixed(2));
 
-            // ==========================================
-            // Validação do desconto
-            // ==========================================
-
-            if (desconto > subtotal) {
+            if (descontoNum > subtotal) {
                 res.status(400).json({
                     erro: "O desconto não pode ser maior que o subtotal da venda."
                 });
-
                 return;
             }
 
-            /**
-             * REGRA DE NEGÓCIO - Grandes descontos
-             *
-             * O projeto determina autorização gerencial
-             * para descontos considerados elevados.
-             *
-             * Entretanto, o limite que caracteriza um
-             * grande desconto ainda não foi definido.
-             *
-             * Por isso, não aplicamos um percentual
-             * arbitrário nesta etapa.
-             *
-             * Essa regra deverá ser implementada antes
-             * de considerar a autorização de descontos
-             * totalmente concluída.
-             */
+            const total = Number((subtotal - descontoNum).toFixed(2));
 
-            // ==========================================
-            // Cálculo do total da venda
-            // ==========================================
+            // 6. Validação e resolução das formas de pagamento
+            const formasExistentes = await FormaPagamentoModel.findAll();
+            const mapaFormasValidas = new Map(formasExistentes.map(f => [f.id, f]));
 
-            const total = Number(
-                (subtotal - desconto).toFixed(2)
-            );
+            const pagamentosFinal: PagamentoCriacao[] = [];
 
-            // ==========================================
-            // Registro da venda
-            // ==========================================
+            if (Array.isArray(pagamentos) && pagamentos.length > 0) {
+                let somaPagamentos = 0;
 
-            // O VendaModel.createComplete registra a venda,
-            // seus itens e a movimentação de estoque
-            // dentro de uma transação no banco de dados.
+                for (const p of pagamentos as PagamentoRequest[]) {
+                    const fId = Number(p.formaPagamentoId);
+                    const val = Number(p.valor);
+
+                    if (!Number.isInteger(fId) || !mapaFormasValidas.has(fId)) {
+                        res.status(400).json({
+                            erro: `Forma de pagamento com ID ${fId} é inválida ou não existe.`
+                        });
+                        return;
+                    }
+
+                    if (!Number.isFinite(val) || val <= 0) {
+                        res.status(400).json({
+                            erro: "O valor de cada pagamento deve ser maior que zero."
+                        });
+                        return;
+                    }
+
+                    somaPagamentos += val;
+                    pagamentosFinal.push({
+                        formaPagamentoId: fId,
+                        valor: Number(val.toFixed(2))
+                    });
+                }
+
+                somaPagamentos = Number(somaPagamentos.toFixed(2));
+
+                if (Math.abs(somaPagamentos - total) > 0.05) {
+                    res.status(400).json({
+                        erro: `A soma dos pagamentos (R$ ${somaPagamentos.toFixed(2)}) não confere com o total da venda (R$ ${total.toFixed(2)}).`
+                    });
+                    return;
+                }
+            } else {
+                // Pagamento único enviado via formaPagamentoId ou formaPagamento (string)
+                let fId: number | null = null;
+
+                if (formaPagamentoId && Number.isInteger(Number(formaPagamentoId))) {
+                    fId = Number(formaPagamentoId);
+                } else if (typeof formaPagamento === "string") {
+                    const normalizado = formaPagamento.trim().toLowerCase();
+                    fId = MAPA_FORMAS_TEXTO[normalizado] ?? null;
+                }
+
+                if (!fId || !mapaFormasValidas.has(fId)) {
+                    // Fallback para a primeira forma ativa ou dinheiro
+                    const primeiraAtiva = formasExistentes.find(f => f.ativo);
+                    fId = primeiraAtiva ? primeiraAtiva.id : 1;
+                }
+
+                // Se em dinheiro, valida se o valor recebido é suficiente (se informado)
+                if (fId === 1 && valorRecebido !== undefined && valorRecebido !== null && valorRecebido !== "") {
+                    const rec = Number(valorRecebido);
+                    if (Number.isFinite(rec) && rec < total) {
+                        res.status(400).json({
+                            erro: `Valor recebido em dinheiro (R$ ${rec.toFixed(2)}) é menor que o total da venda (R$ ${total.toFixed(2)}).`
+                        });
+                        return;
+                    }
+                }
+
+                pagamentosFinal.push({
+                    formaPagamentoId: fId,
+                    valor: total
+                });
+            }
+
+            // 7. Gravação atômica da venda no banco de dados (transação MySQL)
             const vendaId = await VendaModel.createComplete({
-                clienteId,
+                clienteId: idClienteFinal,
                 usuarioId,
                 subtotal,
-                desconto,
+                desconto: descontoNum,
                 total,
-                itens: itensVenda
+                itens: itensVenda,
+                pagamentos: pagamentosFinal
             });
 
             res.status(201).json({
-                mensagem: "Venda registrada com sucesso.",
+                mensagem: "Venda finalizada com sucesso.",
                 id: vendaId,
                 subtotal,
-                desconto,
+                desconto: descontoNum,
                 total
             });
 
         } catch (error) {
             console.error("Erro ao registrar venda:", error);
 
+            const msg = error instanceof Error ? error.message : "Erro interno do servidor.";
             res.status(500).json({
-                erro: "Erro interno do servidor."
+                erro: msg
             });
         }
     }
 
     // ==================================================
-    // FIND ALL - Listar vendas
+    // FIND ALL - Listar vendas com filtros
     // ==================================================
 
+    // Converte os filtros da requisição e lista as vendas correspondentes.
     static async findAll(
         req: Request,
         res: Response
     ): Promise<void> {
         try {
-            // Busca todas as vendas cadastradas.
-            const vendas = await VendaModel.findAll();
+            const {
+                busca,
+                status,
+                operadorId,
+                formaPagamentoId,
+                dataInicio,
+                dataFim
+            } = req.query;
+
+            const filtros = {
+                busca: typeof busca === "string" ? busca : undefined,
+                status: typeof status === "string" ? status : undefined,
+                operadorId: operadorId ? Number(operadorId) : undefined,
+                formaPagamentoId: formaPagamentoId ? Number(formaPagamentoId) : undefined,
+                dataInicio: typeof dataInicio === "string" ? dataInicio : undefined,
+                dataFim: typeof dataFim === "string" ? dataFim : undefined
+            };
+
+            const vendas = await VendaModel.findAll(filtros);
 
             res.status(200).json({
                 dados: vendas
@@ -299,15 +332,16 @@ export class VendaController {
             console.error("Erro ao buscar vendas:", error);
 
             res.status(500).json({
-                erro: "Erro interno do servidor."
+                erro: "Erro interno do servidor ao carregar histórico de vendas."
             });
         }
     }
 
     // ==================================================
-    // FIND BY ID - Buscar venda e seus itens
+    // FIND BY ID - Buscar venda detalhada
     // ==================================================
 
+    // Valida o ID e retorna dados detalhados, itens e pagamentos da venda.
     static async findById(
         req: Request,
         res: Response
@@ -315,24 +349,12 @@ export class VendaController {
         try {
             const id = Number(req.params.id);
 
-            // ==========================================
-            // Validação do ID da venda
-            // ==========================================
-
-            if (
-                !Number.isInteger(id) ||
-                id <= 0
-            ) {
+            if (!Number.isInteger(id) || id <= 0) {
                 res.status(400).json({
                     erro: "ID da venda inválido."
                 });
-
                 return;
             }
-
-            // ==========================================
-            // Busca da venda
-            // ==========================================
 
             const venda = await VendaModel.findById(id);
 
@@ -340,38 +362,27 @@ export class VendaController {
                 res.status(404).json({
                     erro: "Venda não encontrada."
                 });
-
                 return;
             }
 
-            // ==========================================
-            // Busca dos itens relacionados
-            // ==========================================
-
-            const itens = await ItemVendaModel.findByVendaId(
-                id
-            );
-
             res.status(200).json({
-                dados: {
-                    ...venda,
-                    itens
-                }
+                dados: venda
             });
 
         } catch (error) {
-            console.error("Erro ao buscar venda:", error);
+            console.error("Erro ao buscar detalhes da venda:", error);
 
             res.status(500).json({
-                erro: "Erro interno do servidor."
+                erro: "Erro interno do servidor ao buscar detalhes da venda."
             });
         }
     }
 
     // ==================================================
-    // CANCEL - Cancelar venda
+    // CANCEL - Cancelar venda (Exclusivo Gerente)
     // ==================================================
 
+    // Autoriza somente gerentes e solicita o cancelamento e estorno do estoque.
     static async cancel(
         req: Request,
         res: Response
@@ -379,53 +390,28 @@ export class VendaController {
         try {
             const id = Number(req.params.id);
 
-            // ==========================================
-            // Identificação do funcionário autenticado
-            // ==========================================
-
-            const usuario = res.locals.usuario as
-                UsuarioAutenticado | undefined;
+            const usuario = res.locals.usuario as UsuarioAutenticado | undefined;
 
             if (!usuario) {
                 res.status(401).json({
                     erro: "Usuário não autenticado."
                 });
-
                 return;
             }
 
-            // ==========================================
-            // Verificação da permissão gerencial
-            // ==========================================
-
-            // Mantemos a validação no Controller como
-            // proteção adicional ao gerenteMiddleware.
             if (usuario.perfil !== "gerente") {
                 res.status(403).json({
                     erro: "Somente usuários com perfil de gerente podem cancelar vendas."
                 });
-
                 return;
             }
 
-            // ==========================================
-            // Validação do ID da venda
-            // ==========================================
-
-            if (
-                !Number.isInteger(id) ||
-                id <= 0
-            ) {
+            if (!Number.isInteger(id) || id <= 0) {
                 res.status(400).json({
                     erro: "ID da venda inválido."
                 });
-
                 return;
             }
-
-            // ==========================================
-            // Busca da venda
-            // ==========================================
 
             const venda = await VendaModel.findById(id);
 
@@ -433,38 +419,49 @@ export class VendaController {
                 res.status(404).json({
                     erro: "Venda não encontrada."
                 });
-
                 return;
             }
 
-            // Impede o cancelamento de uma venda
-            // que já está cancelada.
             if (venda.status === "cancelada") {
                 res.status(400).json({
-                    erro: "A venda já está cancelada."
+                    erro: "Esta venda já está cancelada."
                 });
-
                 return;
             }
 
-            // ==========================================
-            // Cancelamento da venda
-            // ==========================================
-
-            // A autorização já foi verificada.
-            // O ID do gerente não precisa ser enviado
-            // pelo frontend.
             await VendaModel.cancel(id);
 
             res.status(200).json({
-                mensagem: "Venda cancelada com sucesso."
+                mensagem: "Venda cancelada com sucesso e estoque restituído."
             });
 
         } catch (error) {
             console.error("Erro ao cancelar venda:", error);
 
             res.status(500).json({
-                erro: "Erro interno do servidor."
+                erro: error instanceof Error ? error.message : "Erro interno do servidor."
+            });
+        }
+    }
+
+    // ==================================================
+    // FORMAS DE PAGAMENTO - Listar formas ativas
+    // ==================================================
+
+    // Retorna somente as formas de pagamento que estao ativas.
+    static async getFormasPagamento(
+        _req: Request,
+        res: Response
+    ): Promise<void> {
+        try {
+            const formas = await FormaPagamentoModel.findAll();
+            res.status(200).json({
+                dados: formas.filter(f => f.ativo)
+            });
+        } catch (error) {
+            console.error("Erro ao buscar formas de pagamento:", error);
+            res.status(500).json({
+                erro: "Erro interno do servidor ao carregar formas de pagamento."
             });
         }
     }

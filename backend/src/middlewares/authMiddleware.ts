@@ -16,6 +16,7 @@ import type {
 // AUTH MIDDLEWARE - Autenticação
 // ======================================================
 
+// Valida o JWT, confirma que o usuário continua cadastrado e guarda sua identidade.
 export async function authMiddleware(
     req: Request,
     res: Response,
@@ -117,6 +118,7 @@ export async function authMiddleware(
 // GERENTE MIDDLEWARE - Autorização
 // ======================================================
 
+// Restringe a rota a usuários autenticados com perfil de gerente.
 export function gerenteMiddleware(
     req: Request,
     res: Response,

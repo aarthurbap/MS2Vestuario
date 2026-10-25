@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { ClienteModel } from "../models/ClienteModel";
 
+// Recebe requisicoes de clientes, valida os dados e devolve respostas HTTP.
 export class ClienteController {
+    // Valida os campos do cliente e solicita ao modelo a inclusão no banco.
     static async create(
         req: Request,
         res: Response
@@ -63,6 +65,7 @@ export class ClienteController {
         }
     }
 
+    // Busca todos os clientes e retorna a lista no corpo da resposta.
     static async findAll(
         req: Request,
         res: Response
@@ -82,6 +85,7 @@ export class ClienteController {
         }
     }
 
+    // Valida o identificador da URL e retorna o cliente correspondente.
     static async findById(
         req: Request,
         res: Response
@@ -119,6 +123,7 @@ export class ClienteController {
         }
     }
 
+    // Confere se o cliente existe, valida os novos dados e atualiza o cadastro.
     static async update(
         req: Request,
         res: Response
@@ -199,6 +204,7 @@ export class ClienteController {
         }
     }
 
+    // Confere se o cliente existe e o remove, tratando vínculos com vendas.
     static async delete(
         req: Request,
         res: Response

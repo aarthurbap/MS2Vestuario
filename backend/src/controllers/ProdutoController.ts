@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { ProdutoModel } from "../models/ProdutoModel";
 
+// Recebe requisicoes de produtos, valida os dados e coordena operacoes do modelo.
 export class ProdutoController {
+    // Valida os dados obrigatorios e cadastra um novo produto.
     static async create(
         req: Request,
         res: Response
@@ -82,6 +84,7 @@ export class ProdutoController {
         }
     }
 
+    // Consulta e retorna todos os produtos cadastrados.
     static async findAll(
         req: Request,
         res: Response
@@ -101,6 +104,7 @@ export class ProdutoController {
         }
     }
 
+    // Valida o identificador e retorna os dados de um produto.
     static async findById(
         req: Request,
         res: Response
@@ -138,6 +142,7 @@ export class ProdutoController {
         }
     }
 
+    // Confere a existencia e a validade dos campos antes de atualizar o produto.
     static async update(
         req: Request,
         res: Response
@@ -238,6 +243,7 @@ export class ProdutoController {
         }
     }
 
+    // Desativa um produto existente sem removê-lo do histórico do sistema.
     static async deactivate(
         req: Request,
         res: Response

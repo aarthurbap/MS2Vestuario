@@ -10,6 +10,7 @@
   --dash-panel-solid: #101729;
   --dash-border: rgba(148, 163, 184, 0.14);
   --dash-border-strong: rgba(148, 163, 184, 0.22);
+  --dash-border-hover: rgba(129, 140, 248, 0.45);
   --dash-text: #eef2ff;
   --dash-muted: #94a3b8;
   --dash-subtle: #64748b;
@@ -57,7 +58,7 @@
   font: inherit;
 }
 
-.ms2-dashboard button {
+:where(.ms2-dashboard) button {
   color: inherit;
 }
 
@@ -1925,7 +1926,7 @@
 .ms2-dashboard__module-page .page-header h1,
 .ms2-dashboard__module-page .page-header h2 {
   margin: 0;
-  color: #f8fafc !important;
+  color: var(--dash-text) !important;
   font-size: clamp(25px, 2.5vw, 34px);
   font-weight: 800;
   line-height: 1.2;
@@ -1934,7 +1935,7 @@
 
 .ms2-dashboard__module-page .page-header p {
   margin: 9px 0 0;
-  color: #94a3b8 !important;
+  color: var(--dash-muted) !important;
   font-size: 12px;
   line-height: 1.75;
 }
@@ -1943,39 +1944,33 @@
 .ms2-dashboard__module-page h2,
 .ms2-dashboard__module-page h3,
 .ms2-dashboard__module-page h4 {
-  color: #f1f5f9;
+  color: var(--dash-text);
 }
 
 .ms2-dashboard__module-page p {
-  color: #9aa8be;
+  color: var(--dash-muted);
 }
 
 /* Cartões existentes nos módulos, por exemplo clientes-card e pdv-card. */
 .ms2-dashboard__module-page [class$="-card"],
 .ms2-dashboard__module-page [class*="-card "] {
-  color: #e2e8f0 !important;
-  background: linear-gradient(
-    145deg,
-    rgba(19, 27, 46, 0.97),
-    rgba(14, 21, 37, 0.97)
-  ) !important;
-  border: 1px solid rgba(148, 163, 184, 0.15) !important;
+  color: var(--dash-text) !important;
+  background: var(--dash-panel-solid) !important;
+  border: 1px solid var(--dash-border) !important;
   border-radius: 16px !important;
-  box-shadow:
-    0 12px 30px rgba(0, 0, 0, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
 }
 
 .ms2-dashboard__module-page [class$="-card"]:hover,
 .ms2-dashboard__module-page [class*="-card "]:hover {
-  border-color: rgba(129, 140, 248, 0.25) !important;
+  border-color: var(--dash-border-hover) !important;
 }
 
 /* Campos de formulários e componentes Input compartilhados. */
 .ms2-dashboard__module-page label {
   display: block;
   margin-bottom: 8px;
-  color: #cbd5e1 !important;
+  color: var(--dash-muted) !important;
   font-size: 12px;
   font-weight: 650;
 }
@@ -1987,9 +1982,9 @@
   max-width: 100%;
   min-height: 44px;
   padding: 11px 13px;
-  color: #f1f5f9 !important;
-  background: rgba(5, 10, 21, 0.78) !important;
-  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  color: var(--theme-text) !important;
+  background: var(--theme-surface-raised) !important;
+  border: 1px solid var(--theme-border-strong) !important;
   border-radius: 10px !important;
   box-shadow: none;
   outline: none;
@@ -2003,56 +1998,31 @@
 
 .ms2-dashboard__module-page input::placeholder,
 .ms2-dashboard__module-page textarea::placeholder {
-  color: #687993 !important;
+  color: var(--theme-text-subtle) !important;
   opacity: 1;
 }
 
 .ms2-dashboard__module-page input:hover,
 .ms2-dashboard__module-page select:hover,
 .ms2-dashboard__module-page textarea:hover {
-  border-color: rgba(129, 140, 248, 0.37) !important;
+  border-color: var(--dash-border-hover) !important;
 }
 
 .ms2-dashboard__module-page input:focus,
 .ms2-dashboard__module-page select:focus,
 .ms2-dashboard__module-page textarea:focus {
-  border-color: #818cf8 !important;
-  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12) !important;
+  border-color: var(--dash-violet) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dash-violet) 18%, transparent) !important;
 }
 
 .ms2-dashboard__module-page select option {
-  color: #f1f5f9;
-  background: #11182a;
+  color: var(--theme-text);
+  background: var(--theme-surface);
 }
 
 .ms2-dashboard__module-page input[type="checkbox"],
 .ms2-dashboard__module-page input[type="radio"] {
-  accent-color: #818cf8;
-}
-
-/* Botões dos formulários e ações CRUD. */
-.ms2-dashboard .ms2-dashboard__module-page button:not(:disabled) {
-  color: #ffffff;
-  background: linear-gradient(110deg, #6366f1, #4f46e5 58%, #2563eb);
-  border: 1px solid rgba(165, 180, 252, 0.23);
-  border-radius: 10px;
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.17);
-  cursor: pointer;
-  transition:
-    background 200ms ease,
-    border-color 200ms ease,
-    box-shadow 200ms ease,
-    transform 200ms ease;
-}
-
-.ms2-dashboard .ms2-dashboard__module-page button:not(:disabled):hover {
-  border-color: rgba(199, 210, 254, 0.4);
-  box-shadow: 0 9px 22px rgba(79, 70, 229, 0.25);
-  transform: translateY(-1px);
-}
-
-.ms2-dashboard .ms2-dashboard__module-page button:not(:disabled):active {
-  transform: translateY(0) scale(0.99);
+  accent-color: var(--dash-violet);
 }
 
 .ms2-dashboard__module-page button:disabled {
@@ -2066,9 +2036,9 @@
 .ms2-dashboard__module-page button[class*="excluir"],
 .ms2-dashboard__module-page button[class*="danger"],
 .ms2-dashboard__module-page button[class*="remover"] {
-  color: #fecdd3 !important;
-  background: rgba(244, 63, 94, 0.1) !important;
-  border: 1px solid rgba(251, 113, 133, 0.24) !important;
+  color: var(--theme-danger) !important;
+  background: color-mix(in srgb, var(--theme-danger) 10%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-danger) 24%, transparent) !important;
   box-shadow: none !important;
 }
 
@@ -2077,14 +2047,14 @@
 .ms2-dashboard__module-page button[class*="excluir"]:hover,
 .ms2-dashboard__module-page button[class*="danger"]:hover,
 .ms2-dashboard__module-page button[class*="remover"]:hover {
-  background: rgba(244, 63, 94, 0.19) !important;
-  border-color: rgba(251, 113, 133, 0.42) !important;
+  background: color-mix(in srgb, var(--theme-danger) 18%, transparent) !important;
+  border-color: color-mix(in srgb, var(--theme-danger) 42%, transparent) !important;
 }
 
 /* Tabelas de produtos, clientes e vendas. */
 .ms2-dashboard__module-page table {
   width: 100%;
-  color: #cbd5e1;
+  color: var(--dash-text);
   border-collapse: separate;
   border-spacing: 0;
   font-size: 12px;
@@ -2093,9 +2063,9 @@
 .ms2-dashboard__module-page thead th,
 .ms2-dashboard__module-page table thead th {
   padding: 12px 13px;
-  color: #8f9db5 !important;
-  background: rgba(148, 163, 184, 0.055) !important;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.13) !important;
+  color: var(--dash-muted) !important;
+  background: var(--theme-surface-soft) !important;
+  border-bottom: 1px solid var(--dash-border) !important;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.65px;
@@ -2105,9 +2075,9 @@
 
 .ms2-dashboard__module-page tbody td {
   padding: 13px;
-  color: #cbd5e1 !important;
+  color: var(--dash-text) !important;
   background: transparent !important;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.08) !important;
+  border-bottom: 1px solid var(--dash-border) !important;
 }
 
 .ms2-dashboard__module-page tbody tr {
@@ -2116,7 +2086,7 @@
 }
 
 .ms2-dashboard__module-page tbody tr:hover {
-  background: rgba(129, 140, 248, 0.045) !important;
+  background: color-mix(in srgb, var(--dash-violet) 5%, transparent) !important;
 }
 
 .ms2-dashboard__module-page tbody tr:last-child td {
@@ -2138,9 +2108,9 @@
 .ms2-dashboard__module-page [class*="success"],
 .ms2-dashboard__module-page [class*="sucesso"] {
   padding: 11px 13px;
-  color: #a7f3d0 !important;
-  background: rgba(16, 185, 129, 0.075) !important;
-  border: 1px solid rgba(52, 211, 153, 0.2) !important;
+  color: var(--theme-success) !important;
+  background: color-mix(in srgb, var(--theme-success) 8%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-success) 20%, transparent) !important;
   border-radius: 10px;
   font-size: 12px;
 }
@@ -2150,9 +2120,9 @@
 .ms2-dashboard__module-page [class*="error"],
 .ms2-dashboard__module-page [class*="erro"] {
   padding: 11px 13px;
-  color: #fecdd3 !important;
-  background: rgba(244, 63, 94, 0.075) !important;
-  border: 1px solid rgba(251, 113, 133, 0.2) !important;
+  color: var(--theme-danger) !important;
+  background: color-mix(in srgb, var(--theme-danger) 8%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-danger) 20%, transparent) !important;
   border-radius: 10px;
   font-size: 12px;
 }
@@ -2169,7 +2139,7 @@
 .ms2-dashboard__module-page .pdv-card h2,
 .ms2-dashboard__module-page .pdv-summary-card h2 {
   margin-top: 0;
-  color: #f1f5f9 !important;
+  color: var(--dash-text) !important;
   font-size: 15px;
   font-weight: 750;
 }
@@ -2177,7 +2147,7 @@
 .ms2-dashboard__module-page .pdv-card-header span,
 .ms2-dashboard__module-page .pdv-summary-row span,
 .ms2-dashboard__module-page .pdv-total span {
-  color: #94a3b8 !important;
+  color: var(--dash-muted) !important;
 }
 
 .ms2-dashboard__module-page .pdv-table-wrapper {
@@ -2187,16 +2157,16 @@
 
 .ms2-dashboard__module-page .pdv-empty {
   padding: 20px 0;
-  color: #8291aa !important;
+  color: var(--dash-muted) !important;
 }
 
 .ms2-dashboard__module-page .pdv-summary-row,
 .ms2-dashboard__module-page .pdv-total {
-  border-color: rgba(148, 163, 184, 0.13) !important;
+  border-color: var(--dash-border) !important;
 }
 
 .ms2-dashboard__module-page .pdv-total strong {
-  color: #a5b4fc !important;
+  color: var(--dash-violet) !important;
 }
 
 /* Formulários em duas colunas ocupam o espaço disponível sem fundo branco. */
@@ -2208,7 +2178,7 @@
 .ms2-dashboard__module-page .clientes-form,
 .ms2-dashboard__module-page .produtos-form,
 .ms2-dashboard__module-page .produto-form {
-  color: #e2e8f0;
+  color: var(--dash-text);
 }
 
 @media (max-width: 760px) {
@@ -2243,35 +2213,15 @@
   .ms2-dashboard__module-page {
     animation: none;
   }
+}
 
-  /* =========================================================
+/* =========================================================
     MS² VESTUÁRIO — ALTERNÂNCIA DE TEMA
     O tema escuro permanece como padrão.
     ========================================================= */
 
   .ms2-dashboard {
     color-scheme: dark;
-  }
-
-  .ms2-dashboard[data-theme="light"] {
-    color-scheme: light;
-
-    --dash-bg: #f4f6fb;
-    --dash-sidebar: #ffffff;
-    --dash-panel: #ffffff;
-    --dash-panel-solid: #ffffff;
-    --dash-border: #e3e8f1;
-    --dash-border-strong: #d3dbea;
-    --dash-text: #182238;
-    --dash-muted: #647089;
-    --dash-subtle: #8490a5;
-    --dash-violet: #6658d9;
-    --dash-cyan: #078eaa;
-    --dash-blue: #3478d4;
-    --dash-pink: #bf59c8;
-
-    background: var(--dash-bg);
-    color: var(--dash-text);
   }
 
   /* Botão de tema */
@@ -2522,7 +2472,6 @@
       transition: none;
     }
   }
-}
 
 /* =========================================================
     BOTÃO DE TEMA
@@ -2576,12 +2525,14 @@
     ========================================================= */
 
 .ms2-dashboard.ms2-dashboard--light {
+  color-scheme: light;
   --dash-bg: #f4f6fb;
   --dash-sidebar: #ffffff;
   --dash-panel: rgba(255, 255, 255, 0.92);
   --dash-panel-solid: #ffffff;
   --dash-border: rgba(15, 23, 42, 0.09);
   --dash-border-strong: rgba(15, 23, 42, 0.16);
+  --dash-border-hover: #6366f1;
   --dash-text: #0f172a;
   --dash-muted: #475569;
   --dash-subtle: #64748b;
@@ -2632,25 +2583,6 @@
 .ms2-dashboard--light .ms2-dashboard__welcome-card {
   background: linear-gradient(135deg, #eef2ff 0%, #ffffff 55%, #ecfeff 100%);
   border-color: var(--dash-border);
-}
-
-.ms2-dashboard--light strong,
-.ms2-dashboard--light h1,
-.ms2-dashboard--light h2,
-.ms2-dashboard--light h3,
-.ms2-dashboard--light .ms2-dashboard__brand-copy strong,
-.ms2-dashboard--light .ms2-dashboard__sale-amount,
-.ms2-dashboard--light .ms2-dashboard__sale-client {
-  color: var(--dash-text);
-}
-
-.ms2-dashboard--light p,
-.ms2-dashboard--light span,
-.ms2-dashboard--light td,
-.ms2-dashboard--light th,
-.ms2-dashboard--light .ms2-dashboard__nav-label,
-.ms2-dashboard--light .ms2-dashboard__brand-copy span {
-  color: var(--dash-muted);
 }
 
 .ms2-dashboard--light .ms2-dashboard__brand-mark,

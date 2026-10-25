@@ -2,6 +2,7 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { database } from "../config/database";
 import { Pagamento } from "../types/pagamento";
 
+// Representa um pagamento no formato retornado pela tabela pagamentos.
 interface PagamentoRow extends RowDataPacket {
     id: number;
     venda_id: number;
@@ -9,9 +10,12 @@ interface PagamentoRow extends RowDataPacket {
     valor: number;
 }
 
+// Define os dados de um pagamento sem o ID gerado pelo banco.
 type NovoPagamento = Omit<Pagamento, "id">;
 
+// Centraliza consultas e alteracoes dos pagamentos registrados nas vendas.
 export class PagamentoModel {
+    // Registra um pagamento e devolve o ID gerado pelo banco.
     static async create(
         pagamento: NovoPagamento
     ): Promise<number> {
@@ -34,6 +38,7 @@ export class PagamentoModel {
         return result.insertId;
     }
 
+    // Busca um pagamento pelo ID ou retorna null quando ele nao existe.
     static async findById(
         id: number
     ): Promise<Pagamento | null> {
@@ -62,6 +67,7 @@ export class PagamentoModel {
         };
     }
 
+    // Consulta todos os pagamentos e converte seus valores para numeros.
     static async findAll(): Promise<Pagamento[]> {
         const [rows] = await database.execute<PagamentoRow[]>(
             `
@@ -82,6 +88,7 @@ export class PagamentoModel {
         }));
     }
 
+    // Atualiza a venda, a forma de pagamento e o valor associado.
     static async update(
         id: number,
         pagamento: NovoPagamento
@@ -106,6 +113,7 @@ export class PagamentoModel {
         return result.affectedRows > 0;
     }
 
+    // Exclui um pagamento pelo ID e informa se houve alteracao.
     static async delete(
         id: number
     ): Promise<boolean> {
@@ -120,6 +128,7 @@ export class PagamentoModel {
         return result.affectedRows > 0;
     }
 
+    // Lista todos os pagamentos vinculados a uma venda.
     static async findByVendaId(
         vendaId: number
     ): Promise<Pagamento[]> {

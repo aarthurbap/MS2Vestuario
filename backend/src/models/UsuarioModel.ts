@@ -2,6 +2,7 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { database } from "../config/database";
 import { Usuario } from "../types/usuario";
 
+// Representa um usuario retornado pela tabela usuarios, incluindo o hash da senha.
 interface UsuarioRow extends RowDataPacket {
     id: number;
     nome: string;
@@ -10,7 +11,9 @@ interface UsuarioRow extends RowDataPacket {
     perfil: "caixa" | "gerente";
 }
 
+// Centraliza as consultas e alteracoes da tabela de usuarios.
 export class UsuarioModel {
+    // Insere um usuario e devolve o ID gerado pelo banco.
     static async create(
         usuario: Omit<Usuario, "id">
     ): Promise<number> {
@@ -35,6 +38,7 @@ export class UsuarioModel {
         return result.insertId;
     }
 
+    // Busca um usuario pelo ID, incluindo o hash necessario para autenticacao.
     static async findById(
         id: number
     ): Promise<Usuario | null> {
@@ -65,6 +69,7 @@ export class UsuarioModel {
         };
     }
 
+    // Lista os usuarios com os campos armazenados no banco.
     static async findAll(): Promise<Usuario[]> {
         const [rows] = await database.execute<UsuarioRow[]>(
             `
@@ -87,6 +92,7 @@ export class UsuarioModel {
         }));
     }
 
+    // Atualiza os dados do usuario e informa se alguma linha foi afetada.
     static async update(
         id: number,
         usuario: Omit<Usuario, "id">
@@ -113,6 +119,7 @@ export class UsuarioModel {
         return result.affectedRows > 0;
     }
 
+    // Exclui um usuario e informa se alguma linha foi removida.
     static async delete(
         id: number
     ): Promise<boolean> {
@@ -127,6 +134,7 @@ export class UsuarioModel {
         return result.affectedRows > 0;
     }
 
+    // Localiza um usuario pelo login para validar suas credenciais no acesso.
     static async findByLogin(
         login: string
     ): Promise<Usuario | null> {

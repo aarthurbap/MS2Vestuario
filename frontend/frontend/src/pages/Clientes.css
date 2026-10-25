@@ -808,3 +808,118 @@
 @media (prefers-reduced-motion: reduce) {
     .clientes-manager *, .clientes-manager *::before, .clientes-manager *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+
+/* =========================================================
+   TEMA CLARO — CLIENTES
+   ========================================================= */
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-manager {
+    --cli-text: #0f172a;
+    --cli-muted: #64748b;
+    --cli-subtle: #94a3b8;
+    --cli-violet: #6366f1;
+    --cli-violet-light: #4338ca;
+    --cli-cyan: #0284c7;
+    --cli-border: #e2e8f0;
+    --cli-panel: #ffffff;
+    color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-card,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-stat-card,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-highlight-card,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-drawer__content,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-modal__content {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #0f172a;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-table th {
+    background: #f8fafc;
+    color: #64748b;
+    border-bottom-color: #e2e8f0;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-table td {
+    border-bottom-color: #f1f5f9;
+    color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-table tr:hover td {
+    background: #f8fafc;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-manager input,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-manager select {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-highlight-card__name {
+    color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-highlight-card__total {
+    color: #0284c7;
+    border-top-color: #e2e8f0;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-button--secondary,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-button--ghost {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-manager .clientes-modal {
+    color: #0f172a;
+    background: #fff;
+    border-color: #dce3ef;
+    box-shadow: 0 25px 70px rgba(15, 23, 42, .2);
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-modal__header,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-modal__footer {
+    border-color: #e2e8f0;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-modal__header h2,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-profile-hero h3,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-profile-info-grid > div strong,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-profile-history h3,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-profile-history__list strong {
+    color: #0f172a;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-modal__header p,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-modal__eyebrow,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-field > span,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-profile-hero span:not(.clientes-profile-avatar),
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-profile-info-grid > div span,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-profile-history__list small {
+    color: #64748b;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .ms2-dashboard .clientes-manager .clientes-field input {
+    color: #0f172a !important;
+    background: #fff !important;
+    border-color: #cbd5e1 !important;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-modal__privacy,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-profile-info-grid > div,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-profile-history__list > div {
+    color: #475569;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-manager .clientes-modal__close {
+    color: #475569;
+    background: #f1f5f9;
+    border-color: #dce3ef;
+}

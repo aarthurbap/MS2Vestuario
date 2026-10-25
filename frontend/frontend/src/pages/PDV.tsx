@@ -6,34 +6,20 @@ import {
 } from "react";
 
 import { apiFetch } from "../services/api";
+import { ComprovanteModal } from "../components/ComprovanteModal";
 
 import type { Cliente, ClientesResponse } from "../types/cliente";
 import type { Produto, ProdutosResponse } from "../types/produtos";
 import type {
     ItemCarrinho,
     CriarVendaResponse,
-    NovaVendaRequest
+    NovaVendaRequest,
+    VendaDetalhada,
+    VendaDetalhadaResponse
 } from "../types/venda";
 import type { UsuarioLogado } from "../types/usuario";
 
 import "./PDV.css";
-
-// ======================================================
-// CONFIGURAÇÃO - Dados da loja (ajuste para os reais)
-// ======================================================
-
-const LOJA = {
-    nome: "MS² Vestuário",
-    razaoSocial: "MS² VESTUÁRIO LTDA",
-    cnpj: "00.000.000/0001-00",
-    ie: "000.000.000.000",
-    endereco: "Rua Exemplo, 123 — Centro",
-    cidade: "São Paulo — SP",
-    telefone: "(11) 0000-0000"
-};
-
-// Percentual aproximado de tributos (Lei 12.741/2012)
-const PERCENTUAL_TRIBUTOS = 0.1845;
 
 // ======================================================
 // FORMATAÇÃO
@@ -45,17 +31,11 @@ const formatarMoeda = (valor: number) =>
         currency: "BRL"
     }).format(valor);
 
-const formatarDataHora = (data: Date) =>
-    new Intl.DateTimeFormat("pt-BR", {
-        dateStyle: "short",
-        timeStyle: "medium"
-    }).format(data);
-
 // ======================================================
-// PAGAMENTO
+// FORMAS DE PAGAMENTO
 // ======================================================
 
-type FormaPagamento = "credito" | "debito" | "pix" | "boleto" | "dinheiro";
+type FormaPagamento = "dinheiro" | "pix" | "credito" | "debito" | "boleto";
 
 const FORMAS_PAGAMENTO: Array<{
     id: FormaPagamento;
@@ -63,23 +43,23 @@ const FORMAS_PAGAMENTO: Array<{
     descricao: string;
     icone: string;
 }> = [
-    { id: "credito", titulo: "Crédito", descricao: "Até 12x", icone: "💳" },
-    { id: "debito", titulo: "Débito", descricao: "À vista", icone: "🏧" },
+    { id: "dinheiro", titulo: "Dinheiro", descricao: "Com troco", icone: "💵" },
     { id: "pix", titulo: "Pix", descricao: "Instantâneo", icone: "⚡" },
-    { id: "boleto", titulo: "Boleto", descricao: "Vence em 3 dias", icone: "🧾" },
-    { id: "dinheiro", titulo: "Dinheiro", descricao: "Com troco", icone: "💵" }
+    { id: "credito", titulo: "Crédito", descricao: "À vista ou parcelado", icone: "💳" },
+    { id: "debito", titulo: "Débito", descricao: "À vista", icone: "🏧" },
+    { id: "boleto", titulo: "Boleto", descricao: "3 dias úteis", icone: "🧾" }
 ];
 
 const NOME_PAGAMENTO: Record<FormaPagamento, string> = {
+    dinheiro: "Dinheiro",
+    pix: "Pix",
     credito: "Cartão de Crédito",
     debito: "Cartão de Débito",
-    pix: "Pix",
-    boleto: "Boleto Bancário",
-    dinheiro: "Dinheiro"
+    boleto: "Boleto Bancário"
 };
 
 // ======================================================
-// IMAGENS - mesmas fotos da tela de Produtos
+// IMAGENS DE PRODUTOS
 // ======================================================
 
 const IMAGENS_ROUPAS: Array<[string[], string]> = [
@@ -105,62 +85,7 @@ function imagemPorNome(nome: string) {
 }
 
 // ======================================================
-// NOTA FISCAL - tipos e utilidades
-// ======================================================
-
-type NotaFiscal = {
-    numeroVenda: number | string;
-    numeroNota: string;
-    serie: string;
-    chave: string;
-    emissao: Date;
-    cliente: Cliente | undefined;
-    operador: string;
-    itens: ItemCarrinho[];
-    subtotal: number;
-    desconto: number;
-    total: number;
-    pagamento: FormaPagamento;
-    parcelas: number;
-    valorRecebido: number;
-    troco: number;
-};
-
-function gerarChaveAcesso(numero: string | number) {
-    let base = `35${Date.now()}${String(numero).padStart(9, "0")}`;
-    while (base.length < 44) base += Math.floor(Math.random() * 10);
-    return base.slice(0, 44).replace(/(\d{4})(?=\d)/g, "$1 ");
-}
-
-// Gera um padrão visual tipo QR Code a partir da chave
-function padraoQr(chave: string) {
-    const digitos = chave.replace(/\D/g, "");
-    const celulas: boolean[] = [];
-    for (let i = 0; i < 21 * 21; i++) {
-        const linha = Math.floor(i / 21);
-        const coluna = i % 21;
-        const canto =
-            (linha < 7 && coluna < 7) ||
-            (linha < 7 && coluna > 13) ||
-            (linha > 13 && coluna < 7);
-        if (canto) {
-            const l = linha % 14 > 6 ? linha - 14 : linha;
-            const c = coluna % 14 > 6 ? coluna - 14 : coluna;
-            const ll = l < 0 ? l + 14 : l;
-            const cc = c < 0 ? c + 14 : c;
-            const borda = ll === 0 || ll === 6 || cc === 0 || cc === 6;
-            const miolo = ll >= 2 && ll <= 4 && cc >= 2 && cc <= 4;
-            celulas.push(borda || miolo);
-        } else {
-            const d = Number(digitos[(i * 7) % digitos.length]);
-            celulas.push((d + linha + coluna) % 3 === 0);
-        }
-    }
-    return celulas;
-}
-
-// ======================================================
-// PÁGINA - Ponto de Venda
+// PÁGINA - Ponto de Venda (PDV)
 // ======================================================
 
 function PDV() {
@@ -170,7 +95,12 @@ function PDV() {
     const [itens, setItens] = useState<ItemCarrinho[]>([]);
     const [desconto, setDesconto] = useState("");
 
-    const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("credito");
+    // Busca rápida de produtos
+    const [buscaProduto, setBuscaProduto] = useState("");
+    const [produtoSelecionadoId, setProdutoSelecionadoId] = useState("");
+    const [quantidadeInput, setQuantidadeInput] = useState(1);
+
+    const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("dinheiro");
     const [parcelas, setParcelas] = useState(1);
     const [valorRecebido, setValorRecebido] = useState("");
 
@@ -178,7 +108,10 @@ function PDV() {
     const [finalizando, setFinalizando] = useState(false);
     const [erro, setErro] = useState("");
     const [sucesso, setSucesso] = useState("");
-    const [notaFiscal, setNotaFiscal] = useState<NotaFiscal | null>(null);
+
+    // Modal de Comprovante de Venda
+    const [vendaFinalizada, setVendaFinalizada] = useState<VendaDetalhada | null>(null);
+    const [modalComprovanteAberto, setModalComprovanteAberto] = useState(false);
 
     useEffect(() => {
         void carregarDados();
@@ -189,11 +122,11 @@ function PDV() {
             setCarregando(true);
             setErro("");
             const [clientesResponse, produtosResponse] = await Promise.all([
-                apiFetch<ClientesResponse>("/clientes"),
-                apiFetch<ProdutosResponse>("/produtos")
+                apiFetch<ClientesResponse>("/clientes").catch(() => ({ dados: [] })),
+                apiFetch<ProdutosResponse>("/produtos").catch(() => ({ dados: [] }))
             ]);
-            setClientes(clientesResponse.dados);
-            setProdutos(produtosResponse.dados.filter((p) => p.ativo));
+            setClientes(clientesResponse.dados || []);
+            setProdutos((produtosResponse.dados || []).filter((p) => p.ativo));
         } catch (error) {
             setErro(
                 error instanceof Error
@@ -205,56 +138,85 @@ function PDV() {
         }
     }
 
+    // Produtos filtrados pela busca rápida
+    const produtosFiltrados = useMemo(() => {
+        if (!buscaProduto.trim()) return produtos;
+        const termo = buscaProduto.trim().toLowerCase();
+        return produtos.filter(
+            (p) =>
+                p.nome.toLowerCase().includes(termo) ||
+                (p.codigo && p.codigo.toLowerCase().includes(termo))
+        );
+    }, [produtos, buscaProduto]);
+
     // ==================================================
     // CARRINHO
     // ==================================================
 
-    function handleAdicionarProduto(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
+    function adicionarProdutoPorId(prodId: number, qtd: number) {
         if (carregando || finalizando) return;
 
         setErro("");
         setSucesso("");
 
-        const form = event.currentTarget;
-        const formData = new FormData(form);
-        const produtoId = Number(formData.get("produtoId"));
-        const quantidade = Number(formData.get("quantidade"));
-
-        if (!Number.isInteger(produtoId) || produtoId <= 0) {
+        if (!Number.isInteger(prodId) || prodId <= 0) {
             setErro("Selecione um produto.");
             return;
         }
-        if (!Number.isInteger(quantidade) || quantidade <= 0) {
-            setErro("Informe uma quantidade válida.");
+        if (!Number.isInteger(qtd) || qtd <= 0) {
+            setErro("Informe uma quantidade válida maior que zero.");
             return;
         }
 
-        const produto = produtos.find((p) => p.id === produtoId);
+        const produto = produtos.find((p) => p.id === prodId);
         if (!produto) {
-            setErro("Produto não encontrado.");
+            setErro("Produto não encontrado no estoque.");
             return;
         }
-        if (quantidade > produto.estoque) {
-            setErro(`Estoque insuficiente para "${produto.nome}".`);
-            return;
-        }
-        if (itens.some((item) => item.produtoId === produtoId)) {
-            setErro("Esse produto já foi adicionado à venda.");
+        if (produto.estoque <= 0) {
+            setErro(`O produto "${produto.nome}" está esgotado no momento.`);
             return;
         }
 
-        setItens((atuais) => [
-            ...atuais,
-            {
-                produtoId: produto.id,
-                nome: produto.nome,
-                quantidade,
-                precoUnitario: produto.preco,
-                estoqueDisponivel: produto.estoque
-            }
-        ]);
-        form.reset();
+        const itemExistente = itens.find((it) => it.produtoId === prodId);
+        const novaQtd = (itemExistente ? itemExistente.quantidade : 0) + qtd;
+
+        if (novaQtd > produto.estoque) {
+            setErro(
+                `Estoque insuficiente para "${produto.nome}". Disponível: ${produto.estoque}, no carrinho: ${itemExistente ? itemExistente.quantidade : 0}.`
+            );
+            return;
+        }
+
+        if (itemExistente) {
+            setItens((atuais) =>
+                atuais.map((it) =>
+                    it.produtoId === prodId ? { ...it, quantidade: novaQtd } : it
+                )
+            );
+        } else {
+            setItens((atuais) => [
+                ...atuais,
+                {
+                    produtoId: produto.id,
+                    codigo: produto.codigo,
+                    nome: produto.nome,
+                    quantidade: qtd,
+                    precoUnitario: Number(produto.preco),
+                    estoqueDisponivel: produto.estoque
+                }
+            ]);
+        }
+
+        // Limpar campos de entrada
+        setProdutoSelecionadoId("");
+        setQuantidadeInput(1);
+    }
+
+    function handleAdicionarProdutoForm(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        const prodId = Number(produtoSelecionadoId);
+        adicionarProdutoPorId(prodId, Number(quantidadeInput));
     }
 
     function alterarQuantidade(produtoId: number, delta: number) {
@@ -312,7 +274,7 @@ function PDV() {
     const clienteAtual = clientes.find((c) => String(c.id) === clienteId);
 
     // ==================================================
-    // VENDA - Finalizar
+    // VENDA - Finalizar de forma atômica
     // ==================================================
 
     async function handleFinalizarVenda() {
@@ -321,103 +283,115 @@ function PDV() {
         setErro("");
         setSucesso("");
 
-        const clienteSelecionado = Number(clienteId);
-
-        if (!Number.isInteger(clienteSelecionado) || clienteSelecionado <= 0) {
-            setErro("Selecione um cliente.");
-            return;
-        }
+        // Validações
         if (itens.length === 0) {
-            setErro("Adicione pelo menos um produto à venda.");
+            setErro("Adicione pelo menos um produto ao carrinho para finalizar a venda.");
             return;
         }
+
         if (!Number.isFinite(descontoNumero) || descontoNumero < 0) {
-            setErro("Informe um desconto válido.");
+            setErro("Informe um valor de desconto válido.");
             return;
         }
+
         if (descontoNumero > subtotal) {
-            setErro("O desconto não pode ser maior que o subtotal.");
-            return;
-        }
-        if (formaPagamento === "dinheiro" && recebidoNumero < total) {
-            setErro("O valor recebido em dinheiro é menor que o total.");
+            setErro("O desconto não pode ser superior ao subtotal da compra.");
             return;
         }
 
-        const usuarioSalvo = sessionStorage.getItem("usuario");
-        if (!usuarioSalvo) {
-            setErro("Usuário não autenticado. Faça login novamente.");
+        if (formaPagamento === "dinheiro" && recebidoNumero > 0 && recebidoNumero < total) {
+            setErro(`O valor recebido em dinheiro (R$ ${recebidoNumero.toFixed(2)}) é menor que o total da venda (R$ ${total.toFixed(2)}).`);
             return;
         }
 
-        let usuario: UsuarioLogado;
-        try {
-            usuario = JSON.parse(usuarioSalvo) as UsuarioLogado;
-        } catch {
-            setErro("Sessão inválida. Faça login novamente.");
-            return;
-        }
-        if (!Number.isInteger(usuario.id) || usuario.id <= 0) {
-            setErro("Usuário inválido. Faça login novamente.");
-            return;
+        // Usuário / Operador
+        const usuarioSalvo = sessionStorage.getItem("usuario") || localStorage.getItem("usuario");
+        let usuario: UsuarioLogado | null = null;
+        if (usuarioSalvo) {
+            try {
+                usuario = JSON.parse(usuarioSalvo) as UsuarioLogado;
+            } catch {
+                usuario = null;
+            }
         }
 
-        const dadosVenda: NovaVendaRequest = {
-            clienteId: clienteSelecionado,
-            usuarioId: usuario.id,
-            desconto: Number(descontoNumero.toFixed(2)),
+        // Cliente selecionado ou Consumidor não identificado (null)
+        const idClienteFinal = clienteId !== "" && Number(clienteId) > 0 ? Number(clienteId) : null;
+
+        const payload: NovaVendaRequest = {
+            clienteId: idClienteFinal,
+            desconto: Number(descontoValido.toFixed(2)),
             itens: itens.map((item) => ({
                 produtoId: item.produtoId,
                 quantidade: item.quantidade
-            }))
-        };
-
-        // Forma de pagamento enviada junto (o backend pode ignorar
-        // se ainda não tiver esses campos).
-        const corpo = {
-            ...dadosVenda,
+            })),
             formaPagamento,
-            parcelas: formaPagamento === "credito" ? parcelas : 1
+            valorRecebido: formaPagamento === "dinheiro" ? (recebidoNumero > 0 ? recebidoNumero : total) : total
         };
-
-        const itensVendidos = [...itens];
-        const clienteVenda = clienteAtual;
-        const usuarioInfo = usuario as UsuarioLogado & { nome?: string; login?: string };
 
         try {
             setFinalizando(true);
 
+            // POST /vendas
             const response = await apiFetch<CriarVendaResponse>("/vendas", {
                 method: "POST",
-                body: JSON.stringify(corpo)
+                body: JSON.stringify(payload)
             });
 
-            const numeroNota = String(response.id).padStart(9, "0");
+            // Buscar os detalhes completos da venda recém-registrada
+            let detalhada: VendaDetalhada;
+            try {
+                const resDetalhe = await apiFetch<VendaDetalhadaResponse>(`/vendas/${response.id}`);
+                detalhada = resDetalhe.dados;
+            } catch {
+                // Monta estrutura de fallback caso a rota de detalhe falhe
+                detalhada = {
+                    id: response.id,
+                    clienteId: idClienteFinal,
+                    clienteNome: clienteAtual ? clienteAtual.nome : null,
+                    clienteCpf: clienteAtual ? clienteAtual.cpf || null : null,
+                    usuarioId: usuario?.id ?? 1,
+                    usuarioNome: usuario?.nome || usuario?.login || "Operador Caixa",
+                    dataVenda: new Date().toISOString(),
+                    subtotal: response.subtotal ?? subtotal,
+                    desconto: response.desconto ?? descontoValido,
+                    total: response.total ?? total,
+                    status: "finalizada",
+                    formasPagamento: NOME_PAGAMENTO[formaPagamento],
+                    itens: itens.map((it, idx) => ({
+                        id: idx + 1,
+                        vendaId: response.id,
+                        produtoId: it.produtoId,
+                        produtoCodigo: it.codigo || `PROD-${it.produtoId}`,
+                        produtoNome: it.nome,
+                        quantidade: it.quantidade,
+                        precoUnitario: it.precoUnitario,
+                        subtotalItem: Number((it.quantidade * it.precoUnitario).toFixed(2))
+                    })),
+                    pagamentos: [
+                        {
+                            id: 1,
+                            vendaId: response.id,
+                            formaPagamentoId: 1,
+                            formaPagamentoNome: NOME_PAGAMENTO[formaPagamento],
+                            valor: response.total ?? total
+                        }
+                    ]
+                };
+            }
 
-            setNotaFiscal({
-                numeroVenda: response.id,
-                numeroNota: numeroNota.replace(/(\d{3})(\d{3})(\d{3})/, "$1.$2.$3"),
-                serie: "001",
-                chave: gerarChaveAcesso(response.id),
-                emissao: new Date(),
-                cliente: clienteVenda,
-                operador: usuarioInfo.nome || usuarioInfo.login || `Usuário ${usuario.id}`,
-                itens: itensVendidos,
-                subtotal,
-                desconto: descontoValido,
-                total,
-                pagamento: formaPagamento,
-                parcelas: formaPagamento === "credito" ? parcelas : 1,
-                valorRecebido: formaPagamento === "dinheiro" ? recebidoNumero : total,
-                troco
-            });
+            // Exibir comprovante e sucesso
+            setVendaFinalizada(detalhada);
+            setModalComprovanteAberto(true);
 
+            // Limpar formulário de venda
             setItens([]);
             setClienteId("");
             setDesconto("");
             setParcelas(1);
             setValorRecebido("");
-            setSucesso(`Venda nº ${response.id} registrada com sucesso!`);
+            setSucesso(`Venda nº ${response.id} concluída com sucesso!`);
+
         } catch (error) {
             setErro(
                 error instanceof Error ? error.message : "Não foi possível finalizar a venda."
@@ -427,44 +401,46 @@ function PDV() {
             setFinalizando(false);
         }
 
+        // Atualizar estoque em tempo real
         try {
-            setCarregando(true);
             const produtosResponse = await apiFetch<ProdutosResponse>("/produtos");
-            setProdutos(produtosResponse.dados.filter((p) => p.ativo));
+            setProdutos((produtosResponse.dados || []).filter((p) => p.ativo));
         } catch {
-            setProdutos([]);
-            setErro(
-                "A venda foi registrada, mas não foi possível atualizar o estoque. " +
-                    "Recarregue a página antes de outra venda."
-            );
-        } finally {
-            setCarregando(false);
+            // Silencioso
         }
     }
 
-    const bloqueado = carregando || finalizando;
+    function handleIniciarNovaVenda() {
+        setModalComprovanteAberto(false);
+        setVendaFinalizada(null);
+        setItens([]);
+        setClienteId("");
+        setDesconto("");
+        setParcelas(1);
+        setValorRecebido("");
+        setErro("");
+        setSucesso("");
+    }
 
-    // ==================================================
-    // INTERFACE
-    // ==================================================
+    const bloqueado = carregando || finalizando;
 
     return (
         <section className="pdv-page">
             <header className="pdv-hero">
                 <div>
                     <span className="pdv-eyebrow">
-                        <span className="pdv-pulse" /> Caixa aberto
+                        <span className="pdv-pulse" /> Caixa aberto • Pronto para vendas
                     </span>
-                    <h1>Ponto de Venda</h1>
-                    <p>Monte o carrinho, escolha o pagamento e emita a nota fiscal.</p>
+                    <h1>Ponto de Venda (PDV)</h1>
+                    <p>Adicione produtos pelo código ou catálogo, selecione o cliente e emita o comprovante.</p>
                 </div>
                 <div className="pdv-hero-stats">
                     <div>
-                        <small>Itens</small>
-                        <strong>{totalUnidades}</strong>
+                        <small>Total Itens</small>
+                        <strong>{totalUnidades} un.</strong>
                     </div>
                     <div>
-                        <small>Total</small>
+                        <small>Valor Total</small>
                         <strong>{formatarMoeda(total)}</strong>
                     </div>
                 </div>
@@ -475,12 +451,17 @@ function PDV() {
                     <span>!</span> {erro}
                 </p>
             )}
+
             {sucesso && (
                 <p className="pdv-alert pdv-alert--success" role="status">
                     <span>✓</span> {sucesso}
-                    {notaFiscal && (
-                        <button type="button" className="pdv-link" onClick={() => setNotaFiscal({ ...notaFiscal })}>
-                            Ver nota fiscal
+                    {vendaFinalizada && (
+                        <button
+                            type="button"
+                            className="pdv-link"
+                            onClick={() => setModalComprovanteAberto(true)}
+                        >
+                            Ver comprovante
                         </button>
                     )}
                 </p>
@@ -488,18 +469,18 @@ function PDV() {
 
             <div className="pdv-grid">
                 <div className="pdv-main">
-                    {/* ---------- Cliente ---------- */}
+                    {/* ---------- 1. Identificação do Cliente ---------- */}
                     <div className="pdv-card">
                         <div className="pdv-card-header">
                             <div className="pdv-step">1</div>
                             <div>
                                 <h2>Cliente</h2>
-                                <p>Quem está comprando</p>
+                                <p>Identificação na compra (opcional para venda balcão)</p>
                             </div>
                         </div>
 
                         <div className="pdv-field">
-                            <label htmlFor="clienteId">Selecione o cliente</label>
+                            <label htmlFor="clienteId">Cliente da Venda</label>
                             <select
                                 id="clienteId"
                                 name="clienteId"
@@ -510,12 +491,10 @@ function PDV() {
                                 }}
                                 disabled={bloqueado}
                             >
-                                <option value="">
-                                    {carregando ? "Carregando clientes..." : "Selecione um cliente"}
-                                </option>
+                                <option value="">Consumidor não identificado (Venda Balcão)</option>
                                 {clientes.map((cliente) => (
                                     <option key={cliente.id} value={cliente.id}>
-                                        {cliente.nome} {cliente.cpf ? `— ${cliente.cpf}` : ""}
+                                        {cliente.nome} {cliente.cpf ? `— CPF: ${cliente.cpf}` : ""}
                                     </option>
                                 ))}
                             </select>
@@ -528,32 +507,56 @@ function PDV() {
                                 </div>
                                 <div>
                                     <strong>{clienteAtual.nome}</strong>
-                                    <small>CPF {clienteAtual.cpf || "não informado"}</small>
+                                    <small>CPF: {clienteAtual.cpf || "não informado"} • Tel: {clienteAtual.telefone || "não informado"}</small>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* ---------- Produtos ---------- */}
+                    {/* ---------- 2. Catálogo e Seleção de Produtos ---------- */}
                     <div className="pdv-card">
                         <div className="pdv-card-header">
                             <div className="pdv-step">2</div>
                             <div>
-                                <h2>Adicionar produto</h2>
-                                <p>Escolha a peça e a quantidade</p>
+                                <h2>Adicionar Produto</h2>
+                                <p>Pesquise por nome ou código e adicione ao carrinho</p>
                             </div>
                         </div>
 
-                        <form className="pdv-add-form" onSubmit={handleAdicionarProduto}>
+                        {/* Barra de pesquisa rápida */}
+                        <div className="pdv-field" style={{ marginBottom: "14px" }}>
+                            <label htmlFor="buscaProduto">Pesquisa Rápida de Produtos</label>
+                            <input
+                                id="buscaProduto"
+                                type="text"
+                                placeholder="Digite o nome ou código do produto..."
+                                value={buscaProduto}
+                                onChange={(e) => setBuscaProduto(e.target.value)}
+                                disabled={bloqueado}
+                            />
+                        </div>
+
+                        <form className="pdv-add-form" onSubmit={handleAdicionarProdutoForm}>
                             <div className="pdv-field pdv-field--grow">
-                                <label htmlFor="produtoId">Produto</label>
-                                <select id="produtoId" name="produtoId" disabled={bloqueado} required>
+                                <label htmlFor="produtoId">Selecione o Produto</label>
+                                <select
+                                    id="produtoId"
+                                    name="produtoId"
+                                    value={produtoSelecionadoId}
+                                    onChange={(e) => setProdutoSelecionadoId(e.target.value)}
+                                    disabled={bloqueado}
+                                    required
+                                >
                                     <option value="">
-                                        {carregando ? "Carregando produtos..." : "Selecione um produto"}
+                                        {carregando
+                                            ? "Carregando catálogo..."
+                                            : produtosFiltrados.length === 0
+                                                ? "Nenhum produto encontrado"
+                                                : "Selecione um produto..."}
                                     </option>
-                                    {produtos.map((produto) => (
-                                        <option key={produto.id} value={produto.id}>
-                                            {produto.nome} — {formatarMoeda(produto.preco)} — Estoque: {produto.estoque}
+                                    {produtosFiltrados.map((produto) => (
+                                        <option key={produto.id} value={produto.id} disabled={produto.estoque <= 0}>
+                                            {produto.nome} {produto.codigo ? `[${produto.codigo}]` : ""} — {formatarMoeda(produto.preco)} — {produto.estoque > 0 ? `Estoque: ${produto.estoque}` : "ESGOTADO"}
                                         </option>
                                     ))}
                                 </select>
@@ -566,25 +569,30 @@ function PDV() {
                                     name="quantidade"
                                     type="number"
                                     min="1"
-                                    defaultValue="1"
+                                    value={quantidadeInput}
+                                    onChange={(e) => setQuantidadeInput(Math.max(1, Number(e.target.value)))}
                                     disabled={bloqueado}
                                     required
                                 />
                             </div>
 
-                            <button type="submit" className="pdv-btn pdv-btn--primary" disabled={bloqueado}>
+                            <button
+                                type="submit"
+                                className="pdv-btn pdv-btn--primary"
+                                disabled={bloqueado || !produtoSelecionadoId}
+                            >
                                 + Adicionar
                             </button>
                         </form>
                     </div>
 
-                    {/* ---------- Carrinho ---------- */}
+                    {/* ---------- 3. Carrinho de Compras ---------- */}
                     <div className="pdv-card">
                         <div className="pdv-card-header">
                             <div className="pdv-step">3</div>
                             <div>
-                                <h2>Carrinho</h2>
-                                <p>{itens.length} produto(s) • {totalUnidades} unidade(s)</p>
+                                <h2>Carrinho de Compras</h2>
+                                <p>{itens.length} produto(s) distintos • {totalUnidades} unidade(s) total</p>
                             </div>
                         </div>
 
@@ -592,7 +600,7 @@ function PDV() {
                             <div className="pdv-empty">
                                 <div className="pdv-empty-icon">🛍️</div>
                                 <strong>Carrinho vazio</strong>
-                                <p>Adicione produtos para começar a venda.</p>
+                                <p>Selecione produtos acima para iniciar o atendimento.</p>
                             </div>
                         ) : (
                             <ul className="pdv-cart">
@@ -606,14 +614,15 @@ function PDV() {
                                         />
                                         <div className="pdv-cart-info">
                                             <strong>{item.nome}</strong>
-                                            <small>{formatarMoeda(item.precoUnitario)} / un.</small>
+                                            {item.codigo && <span style={{ fontSize: "11px", color: "var(--pdv-muted)", fontFamily: "monospace" }}>{item.codigo}</span>}
+                                            <small>{formatarMoeda(item.precoUnitario)} / un. • Disp: {item.estoqueDisponivel}</small>
                                         </div>
                                         <div className="pdv-qty">
                                             <button
                                                 type="button"
                                                 onClick={() => alterarQuantidade(item.produtoId, -1)}
                                                 disabled={finalizando || item.quantidade <= 1}
-                                                aria-label="Diminuir"
+                                                aria-label="Diminuir quantidade"
                                             >
                                                 −
                                             </button>
@@ -622,7 +631,7 @@ function PDV() {
                                                 type="button"
                                                 onClick={() => alterarQuantidade(item.produtoId, 1)}
                                                 disabled={finalizando || item.quantidade >= item.estoqueDisponivel}
-                                                aria-label="Aumentar"
+                                                aria-label="Aumentar quantidade"
                                             >
                                                 +
                                             </button>
@@ -646,14 +655,14 @@ function PDV() {
                     </div>
                 </div>
 
-                {/* ---------- Resumo / Pagamento ---------- */}
+                {/* ---------- 4. Resumo e Pagamento ---------- */}
                 <aside className="pdv-summary">
                     <div className="pdv-card pdv-card--summary">
                         <div className="pdv-card-header">
                             <div className="pdv-step">4</div>
                             <div>
                                 <h2>Pagamento</h2>
-                                <p>Escolha a forma de pagamento</p>
+                                <p>Forma de pagamento da venda</p>
                             </div>
                         </div>
 
@@ -677,7 +686,7 @@ function PDV() {
 
                         {formaPagamento === "credito" && (
                             <div className="pdv-installments">
-                                <label>Parcelamento</label>
+                                <label>Opções de Parcelamento</label>
                                 <div className="pdv-installments-grid">
                                     {opcoesParcelas.map((n) => (
                                         <button
@@ -699,32 +708,37 @@ function PDV() {
 
                         {formaPagamento === "pix" && (
                             <div className="pdv-pay-info">
-                                ⚡ O QR Code Pix será gerado na nota fiscal após finalizar.
+                                ⚡ Pagamento instantâneo via Pix gerado no comprovante.
                             </div>
                         )}
+
                         {formaPagamento === "boleto" && (
                             <div className="pdv-pay-info">
-                                🧾 Boleto com vencimento em 3 dias úteis.
+                                🧾 Boleto bancário com vencimento em 3 dias úteis.
                             </div>
                         )}
+
                         {formaPagamento === "debito" && (
-                            <div className="pdv-pay-info">🏧 Pagamento à vista no débito.</div>
+                            <div className="pdv-pay-info">
+                                🏧 Pagamento à vista com cartão de débito.
+                            </div>
                         )}
+
                         {formaPagamento === "dinheiro" && (
                             <div className="pdv-field">
-                                <label htmlFor="valorRecebido">Valor recebido</label>
+                                <label htmlFor="valorRecebido">Valor recebido (R$)</label>
                                 <input
                                     id="valorRecebido"
                                     type="number"
                                     min="0"
                                     step="0.01"
-                                    placeholder="0,00"
+                                    placeholder="Informe o valor entregue pelo cliente"
                                     value={valorRecebido}
                                     onChange={(e) => setValorRecebido(e.target.value)}
                                     disabled={bloqueado}
                                 />
                                 {troco > 0 && (
-                                    <small className="pdv-troco">Troco: {formatarMoeda(troco)}</small>
+                                    <small className="pdv-troco">Troco a devolver: <strong>{formatarMoeda(troco)}</strong></small>
                                 )}
                             </div>
                         )}
@@ -743,6 +757,7 @@ function PDV() {
                                 name="desconto"
                                 type="number"
                                 min="0"
+                                max={subtotal}
                                 step="0.01"
                                 placeholder="0,00"
                                 value={desconto}
@@ -765,182 +780,30 @@ function PDV() {
                             type="button"
                             className="pdv-btn pdv-btn--finish"
                             onClick={() => void handleFinalizarVenda()}
-                            disabled={bloqueado || itens.length === 0 || !clienteId}
+                            disabled={bloqueado || itens.length === 0}
                         >
-                            {finalizando ? "Finalizando..." : "Finalizar venda e emitir nota"}
+                            {finalizando ? (
+                                <>
+                                    <span style={{ display: "inline-block", width: "16px", height: "16px", border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.6s linear infinite", marginRight: "8px" }} />
+                                    Finalizando venda...
+                                </>
+                            ) : (
+                                "Finalizar Venda"
+                            )}
                         </button>
                     </div>
                 </aside>
             </div>
 
-            {notaFiscal && (
-                <NotaFiscalModal nota={notaFiscal} onFechar={() => setNotaFiscal(null)} />
-            )}
+            {/* Modal de Comprovante de Venda e Pós-Venda */}
+            <ComprovanteModal
+                venda={vendaFinalizada}
+                isOpen={modalComprovanteAberto}
+                onClose={() => setModalComprovanteAberto(false)}
+                onNovaVenda={handleIniciarNovaVenda}
+                isPosVenda={true}
+            />
         </section>
-    );
-}
-
-// ======================================================
-// COMPONENTE - Nota Fiscal (NFC-e)
-// ======================================================
-
-function NotaFiscalModal({ nota, onFechar }: { nota: NotaFiscal; onFechar: () => void }) {
-    const qr = useMemo(() => padraoQr(nota.chave), [nota.chave]);
-    const tributos = nota.total * PERCENTUAL_TRIBUTOS;
-
-    useEffect(() => {
-        const fecharComEsc = (e: KeyboardEvent) => e.key === "Escape" && onFechar();
-        window.addEventListener("keydown", fecharComEsc);
-        return () => window.removeEventListener("keydown", fecharComEsc);
-    }, [onFechar]);
-
-    return (
-        <div className="nf-overlay" onClick={onFechar}>
-            <div className="nf-wrapper" onClick={(e) => e.stopPropagation()}>
-                <div className="nf-actions">
-                    <button type="button" className="pdv-btn pdv-btn--primary" onClick={() => window.print()}>
-                        🖨️ Imprimir nota
-                    </button>
-                    <button type="button" className="pdv-btn pdv-btn--ghost" onClick={onFechar}>
-                        Fechar
-                    </button>
-                </div>
-
-                <article className="nf-paper" id="nota-fiscal">
-                    <header className="nf-header">
-                        <div className="nf-logo">
-                            MS<sup>2</sup>
-                        </div>
-                        <div>
-                            <h3>{nota.cliente ? LOJA.razaoSocial : LOJA.nome}</h3>
-                            <p>CNPJ {LOJA.cnpj} • IE {LOJA.ie}</p>
-                            <p>{LOJA.endereco} • {LOJA.cidade}</p>
-                            <p>Tel. {LOJA.telefone}</p>
-                        </div>
-                    </header>
-
-                    <div className="nf-title">
-                        <strong>DANFE NFC-e</strong>
-                        <span>Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica</span>
-                    </div>
-
-                    <div className="nf-meta">
-                        <div>
-                            <small>Nº da nota</small>
-                            <strong>{nota.numeroNota}</strong>
-                        </div>
-                        <div>
-                            <small>Série</small>
-                            <strong>{nota.serie}</strong>
-                        </div>
-                        <div>
-                            <small>Venda</small>
-                            <strong>#{nota.numeroVenda}</strong>
-                        </div>
-                        <div>
-                            <small>Emissão</small>
-                            <strong>{formatarDataHora(nota.emissao)}</strong>
-                        </div>
-                    </div>
-
-                    <table className="nf-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Descrição</th>
-                                <th>Qtd</th>
-                                <th>Vl. unit.</th>
-                                <th>Vl. total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {nota.itens.map((item, i) => (
-                                <tr key={item.produtoId}>
-                                    <td>{String(i + 1).padStart(3, "0")}</td>
-                                    <td>
-                                        {item.nome}
-                                        <small>Cód. {item.produtoId} • UN</small>
-                                    </td>
-                                    <td>{item.quantidade}</td>
-                                    <td>{formatarMoeda(item.precoUnitario)}</td>
-                                    <td>{formatarMoeda(item.precoUnitario * item.quantidade)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    <div className="nf-totals">
-                        <div>
-                            <span>Qtd. total de itens</span>
-                            <span>{nota.itens.reduce((t, i) => t + i.quantidade, 0)}</span>
-                        </div>
-                        <div>
-                            <span>Subtotal</span>
-                            <span>{formatarMoeda(nota.subtotal)}</span>
-                        </div>
-                        <div>
-                            <span>Desconto</span>
-                            <span>− {formatarMoeda(nota.desconto)}</span>
-                        </div>
-                        <div className="nf-grand-total">
-                            <span>Valor a pagar</span>
-                            <span>{formatarMoeda(nota.total)}</span>
-                        </div>
-                    </div>
-
-                    <div className="nf-payment">
-                        <div>
-                            <span>Forma de pagamento</span>
-                            <strong>
-                                {NOME_PAGAMENTO[nota.pagamento]}
-                                {nota.pagamento === "credito" &&
-                                    ` — ${nota.parcelas}x de ${formatarMoeda(nota.total / nota.parcelas)}`}
-                            </strong>
-                        </div>
-                        <div>
-                            <span>Valor pago</span>
-                            <strong>{formatarMoeda(nota.valorRecebido)}</strong>
-                        </div>
-                        {nota.troco > 0 && (
-                            <div>
-                                <span>Troco</span>
-                                <strong>{formatarMoeda(nota.troco)}</strong>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="nf-consumer">
-                        <small>Consumidor</small>
-                        <strong>{nota.cliente?.nome ?? "Consumidor não identificado"}</strong>
-                        {nota.cliente?.cpf && <span>CPF {nota.cliente.cpf}</span>}
-                        <span>Operador: {nota.operador}</span>
-                    </div>
-
-                    <div className="nf-footer">
-                        <div className="nf-qr" aria-label="QR Code da nota">
-                            {qr.map((on, i) => (
-                                <span key={i} className={on ? "on" : ""} />
-                            ))}
-                        </div>
-                        <div className="nf-key">
-                            <small>Chave de acesso</small>
-                            <code>{nota.chave}</code>
-                            <p>
-                                Consulte pela chave de acesso em
-                                <br />
-                                www.nfce.fazenda.sp.gov.br
-                            </p>
-                            <p className="nf-taxes">
-                                Tributos totais aproximados: {formatarMoeda(tributos)} (
-                                {(PERCENTUAL_TRIBUTOS * 100).toFixed(2).replace(".", ",")}%) — Lei 12.741/2012
-                            </p>
-                        </div>
-                    </div>
-
-                    <p className="nf-thanks">Obrigado pela preferência! Volte sempre 💜</p>
-                </article>
-            </div>
-        </div>
     );
 }
 

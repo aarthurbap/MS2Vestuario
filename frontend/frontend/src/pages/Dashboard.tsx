@@ -1,3 +1,4 @@
+import { useTheme } from "../contexts/useTheme";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./Dashboard.css";
@@ -237,21 +238,17 @@ const NAV_ITEMS: Array<{
   { label: "Produtos", path: "/produtos", icon: "package", id: "products" },
   { label: "Clientes", path: "/clientes", icon: "users", id: "customers" },
   { label: "PDV / Caixa", path: "/pdv", icon: "shopping-bag", id: "pdv" },
-  // Ainda não existem páginas de histórico de vendas e relatórios no AppRoutes.
-  // Mantemos os itens visíveis, mas desabilitados para não redirecionar ao login.
   {
     label: "Vendas",
     path: "/vendas",
     icon: "receipt",
     id: "sales",
-    disabled: true,
   },
   {
     label: "Relatórios",
     path: "/relatorios",
     icon: "chart",
     id: "reports",
-    disabled: true,
   },
 ];
 
@@ -508,19 +505,7 @@ export default function Dashboard() {
   const [apiStatus, setApiStatus] = useState<ApiStatus>("loading");
   const [erroGeral, setErroGeral] = useState("");
   const [buscaVendas, setBuscaVendas] = useState("");
-  const [tema, setTema] = useState<"dark" | "light">(() => {
-    if (typeof window === "undefined") return "dark";
-    const salvo = window.localStorage.getItem("ms2-tema");
-    return salvo === "light" || salvo === "dark" ? salvo : "dark";
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem("ms2-tema", tema);
-    document.documentElement.setAttribute("data-theme", tema);
-  }, [tema]);
-
-  const alternarTema = () =>
-    setTema((atual) => (atual === "dark" ? "light" : "dark"));
+  const { theme: tema, alternarTema } = useTheme();
 
   const nomeUsuario = useMemo(() => getUserName(usuario), [usuario]);
   const iniciaisUsuario = useMemo(() => getUserInitials(usuario), [usuario]);
@@ -1223,17 +1208,16 @@ export default function Dashboard() {
                     <button
                       className="ms2-dashboard__shortcut"
                       type="button"
-                      disabled
-                      title="O módulo de relatórios ainda não foi implementado."
+                      onClick={() => navigate("/relatorios")}
                     >
                       <span className="ms2-dashboard__shortcut-icon is-pink">
                         <Icon name="chart" size={19} />
                       </span>
                       <span className="ms2-dashboard__shortcut-copy">
-                        <strong>Relatórios em breve</strong>
-                        <small>O módulo será disponibilizado futuramente</small>
+                        <strong>Consultar relatórios</strong>
+                        <small>Analisar vendas, produtos e pagamentos</small>
                       </span>
-                      <Icon name="clock" size={17} />
+                      <Icon name="arrow-up-right" size={17} />
                     </button>
                   </div>
 
