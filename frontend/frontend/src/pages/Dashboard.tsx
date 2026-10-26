@@ -1,5 +1,5 @@
 import { useTheme } from "../contexts/useTheme";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 
@@ -490,6 +490,22 @@ function IconButtonLabel({ children }: { children: ReactNode }) {
   return <span className="ms2-dashboard__button-label">{children}</span>;
 }
 
+// Brilho discreto acompanha o ponteiro, sem setState e sem renderizações extras.
+// Ativo apenas nos cartões e no banner da visão geral.
+function acompanharPonteiro(event: ReactPointerEvent<HTMLElement>) {
+  if (event.pointerType === "touch") return;
+  const elemento = event.currentTarget;
+  const area = elemento.getBoundingClientRect();
+  elemento.style.setProperty("--ms2-pointer-x", `${event.clientX - area.left}px`);
+  elemento.style.setProperty("--ms2-pointer-y", `${event.clientY - area.top}px`);
+}
+
+function limparPonteiro(event: ReactPointerEvent<HTMLElement>) {
+  const elemento = event.currentTarget;
+  elemento.style.removeProperty("--ms2-pointer-x");
+  elemento.style.removeProperty("--ms2-pointer-y");
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -901,7 +917,11 @@ export default function Dashboard() {
                 </button>
               </section>
 
-              <section className="ms2-dashboard__welcome-card">
+              <section
+                className="ms2-dashboard__welcome-card"
+                onPointerMove={acompanharPonteiro}
+                onPointerLeave={limparPonteiro}
+              >
                 <div className="ms2-dashboard__welcome-orb ms2-dashboard__welcome-orb--one" />
                 <div className="ms2-dashboard__welcome-orb ms2-dashboard__welcome-orb--two" />
                 <div className="ms2-dashboard__welcome-content">
@@ -970,10 +990,13 @@ export default function Dashboard() {
                 )}
 
                 <div className="ms2-dashboard__metrics-grid">
-                  {metricCards.map((metric) => (
+                  {metricCards.map((metric, indice) => (
                     <article
-                      className="ms2-dashboard__metric-card"
+                      className={`ms2-dashboard__metric-card ms2-dashboard__metric-card--${metric.tone}`}
                       key={metric.key}
+                      style={{ "--ms2-stagger": `${indice * 75}ms` } as CSSProperties}
+                      onPointerMove={acompanharPonteiro}
+                      onPointerLeave={limparPonteiro}
                     >
                       <div
                         className={`ms2-dashboard__metric-icon is-${metric.tone}`}
@@ -1010,12 +1033,13 @@ export default function Dashboard() {
                       <p>Últimos registros retornados pelo módulo de vendas.</p>
                     </div>
                     <button
-                      className="ms2-dashboard__icon-button"
+                      className={`ms2-dashboard__icon-button${carregando ? " is-updating" : ""}`}
                       type="button"
                       onClick={atualizarDados}
                       disabled={carregando}
-                      title="Atualizar dados"
-                      aria-label="Atualizar dados"
+                      aria-busy={carregando}
+                      title={carregando ? "Atualizando dados" : "Atualizar dados"}
+                      aria-label={carregando ? "Atualizando dados" : "Atualizar dados"}
                     >
                       <Icon name="refresh" size={17} />
                     </button>

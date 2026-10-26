@@ -923,3 +923,137 @@
     background: #f1f5f9;
     border-color: #dce3ef;
 }
+
+/* =========================================================
+   CONFIRMAÇÃO DE EXCLUSÃO — MODAL PERSONALIZADO
+   Reaproveita o backdrop e o painel dos modais existentes.
+   ========================================================= */
+.clientes-manager .clientes-modal--delete {
+    width: min(100%, 460px);
+    border-color: rgba(251, 113, 133, .22);
+    background: radial-gradient(ellipse at 50% 0%, rgba(244, 63, 94, .09), transparent 58%), linear-gradient(150deg, #151c2f, #0c1322 78%);
+}
+
+.clientes-manager .clientes-modal--delete .clientes-modal__header {
+    padding: 25px 25px 18px;
+}
+
+.clientes-manager .clientes-modal--delete .clientes-modal__eyebrow {
+    color: #fda4af;
+}
+
+.clientes-manager .clientes-modal--delete .clientes-modal__header h2 {
+    font-size: 22px;
+}
+
+.clientes-delete-content { padding: 22px 25px 25px; }
+
+.clientes-delete-symbol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 17px;
+    color: #fda4af;
+    background: rgba(244, 63, 94, .11);
+    border: 1px solid rgba(251, 113, 133, .27);
+    border-radius: 18px;
+    box-shadow: 0 0 30px rgba(244, 63, 94, .075);
+}
+
+.clientes-delete-description {
+    margin: 0 0 18px;
+    color: #bdc7d7;
+    font-size: 12px;
+    line-height: 1.75;
+}
+
+.clientes-delete-target {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 13px;
+    background: rgba(148, 163, 184, .045);
+    border: 1px solid rgba(148, 163, 184, .13);
+    border-radius: 13px;
+}
+
+.clientes-delete-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    color: #e0e7ff;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    border: 1px solid rgba(165, 180, 252, .27);
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.clientes-delete-target > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.clientes-delete-target strong { color: #f1f5f9; font-size: 12px; font-weight: 750; overflow-wrap: anywhere; }
+.clientes-delete-target > div > span { color: #94a3b8; font-size: 10px; }
+
+.clientes-delete-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 12px;
+    color: #fecdd3;
+    background: rgba(244, 63, 94, .075);
+    border: 1px solid rgba(251, 113, 133, .16);
+    border-radius: 11px;
+    font-size: 10px;
+    line-height: 1.7;
+}
+.clientes-delete-warning svg { flex-shrink: 0; margin-top: 1px; }
+.clientes-delete-content > .clientes-alert { margin-top: 15px; margin-bottom: 0; }
+
+.clientes-delete-footer { margin-top: 22px; }
+
+.ms2-dashboard .ms2-dashboard__module-page .clientes-manager .clientes-button--danger {
+    color: #fff;
+    background: linear-gradient(115deg, #e11d48, #be123c);
+    border: 1px solid rgba(251, 113, 133, .38);
+    box-shadow: 0 7px 20px rgba(225, 29, 72, .16);
+}
+.ms2-dashboard .ms2-dashboard__module-page .clientes-manager .clientes-button--danger:hover:not(:disabled) {
+    color: #fff;
+    background: linear-gradient(115deg, #f43f5e, #e11d48);
+    border-color: rgba(251, 113, 133, .65);
+    box-shadow: 0 9px 24px rgba(225, 29, 72, .22);
+    transform: translateY(-1px);
+}
+
+.clientes-delete-loading {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, .35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: clientes-spin .7s linear infinite;
+}
+
+@media (max-width: 520px) {
+    .clientes-manager .clientes-modal--delete { margin: auto 0; }
+    .clientes-delete-content { padding: 19px 18px 21px; }
+    .clientes-manager .clientes-modal--delete .clientes-modal__header { padding: 22px 18px 17px; }
+    .clientes-manager .clientes-modal--delete .clientes-modal__header h2 { font-size: 20px; }
+}
+
+/* Excluir também deve combinar com o tema claro existente. */
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-manager .clientes-modal--delete {
+    background: radial-gradient(ellipse at 50% 0%, rgba(244, 63, 94, .06), transparent 57%), #fff;
+    border-color: #fecdd3;
+}
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-delete-description,
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-delete-target strong { color: #334155; }
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-delete-target { background: #f8fafc; border-color: #e2e8f0; }
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-delete-target > div > span { color: #64748b; }
+:where(html[data-theme="light"], body[data-theme="light"], [data-theme="light"], .ms2-dashboard--light) .clientes-delete-warning { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }

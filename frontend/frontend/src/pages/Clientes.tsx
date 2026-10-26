@@ -31,7 +31,7 @@ type ClienteForm = {
   email: string;
 };
 
-type ModoModal = "novo" | "editar" | "perfil" | null;
+type ModoModal = "novo" | "editar" | "perfil" | "excluir" | null;
 
 type EstatisticaCliente = {
   cliente: ClienteItem;
@@ -262,7 +262,8 @@ function Icone({
     | "user"
     | "check"
     | "arrow"
-    | "chart";
+    | "chart"
+    | "warning";
   tamanho?: number;
 }) {
   const propriedades = {
@@ -392,6 +393,14 @@ function Icone({
           <path d="m7 15 4-4 3 2 6-7" />
         </svg>
       );
+    case "warning":
+      return (
+        <svg {...propriedades}>
+          <path d="M12 3.5 2.6 20h18.8L12 3.5Z" />
+          <path d="M12 9v5" />
+          <path d="M12 17.5h.01" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -402,6 +411,7 @@ export default function Clientes() {
   const [vendas, setVendas] = useState<VendaItem[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
   const [clienteEmEdicao, setClienteEmEdicao] = useState<ClienteItem | null>(
     null,
   );
@@ -454,7 +464,7 @@ export default function Clientes() {
     if (!modoModal) return;
 
     const aoPressionarEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !salvando) fecharModal();
+      if (event.key === "Escape" && !salvando && !excluindo) fecharModal();
     };
 
     const overflowAnterior = document.body.style.overflow;
@@ -465,7 +475,7 @@ export default function Clientes() {
       document.body.style.overflow = overflowAnterior;
       window.removeEventListener("keydown", aoPressionarEsc);
     };
-  }, [modoModal, salvando]);
+  }, [modoModal, salvando, excluindo]);
 
   const estatisticas = useMemo<EstatisticaCliente[]>(() => {
     return clientes.map((cliente) => {
@@ -565,8 +575,16 @@ export default function Clientes() {
     setModoModal("perfil");
   }
 
+  function abrirConfirmacaoExclusao(cliente: ClienteItem) {
+    setClienteSelecionado(cliente);
+    setClienteEmEdicao(null);
+    setErro("");
+    setSucesso("");
+    setModoModal("excluir");
+  }
+
   function fecharModal() {
-    if (salvando) return;
+    if (salvando || excluindo) return;
     setModoModal(null);
     setClienteEmEdicao(null);
     setClienteSelecionado(null);
@@ -634,17 +652,18 @@ export default function Clientes() {
     }
   }
 
-  async function excluirCliente(cliente: ClienteItem) {
-    const confirmou = window.confirm(
-      `Deseja realmente excluir o cliente ${cliente.nome}? Esta ação não pode ser desfeita.`,
-    );
-    if (!confirmou) return;
+  async function confirmarExclusao() {
+    if (!clienteSelecionado || excluindo) return;
 
+    const cliente = clienteSelecionado;
     setErro("");
     setSucesso("");
+    setExcluindo(true);
 
     try {
       await apiFetch<unknown>(`/clientes/${cliente.id}`, { method: "DELETE" });
+      setModoModal(null);
+      setClienteSelecionado(null);
       setSucesso(`Cliente ${cliente.nome} excluído com sucesso.`);
       await carregarDados();
     } catch (error) {
@@ -653,6 +672,8 @@ export default function Clientes() {
           ? error.message
           : "Não foi possível excluir o cliente. Verifique a rota de exclusão da API.",
       );
+    } finally {
+      setExcluindo(false);
     }
   }
 
@@ -871,7 +892,7 @@ export default function Clientes() {
                             type="button"
                             title={`Excluir ${cliente.nome}`}
                             aria-label={`Excluir ${cliente.nome}`}
-                            onClick={() => void excluirCliente(cliente)}
+                            onClick={() => abrirConfirmacaoExclusao(cliente)}
                           >
                             <Icone nome="trash" tamanho={16} />
                           </button>
@@ -1040,43 +1061,101 @@ export default function Clientes() {
           }}
         >
           <section
-            className={`clientes-modal ${modoModal === "perfil" ? "clientes-modal--profile" : ""}`}
-            role="dialog"
+            className={`clientes-modal ${modoModal === "perfil" ? "clientes-modal--profile" : modoModal === "excluir" ? "clientes-modal--delete" : ""}`}
+            role={modoModal === "excluir" ? "alertdialog" : "dialog"}
             aria-modal="true"
             aria-labelledby="clientes-modal-title"
+            aria-describedby={modoModal === "excluir" ? "clientes-exclusao-descricao" : undefined}
           >
             <header className="clientes-modal__header">
               <div>
                 <span className="clientes-modal__eyebrow">
-                  MS² VESTUÁRIO · CLIENTES
+                  {modoModal === "excluir" ? "CONFIRMAÇÃO DE EXCLUSÃO" : "MS² VESTUÁRIO · CLIENTES"}
                 </span>
                 <h2 id="clientes-modal-title">
                   {modoModal === "novo"
                     ? "Adicionar cliente"
                     : modoModal === "editar"
                       ? "Editar cadastro"
-                      : "Perfil do cliente"}
+                      : modoModal === "excluir"
+                        ? "Excluir cliente?"
+                        : "Perfil do cliente"}
                 </h2>
                 <p>
                   {modoModal === "novo"
                     ? "Preencha os dados para incluir um cliente na base."
                     : modoModal === "editar"
                       ? "Atualize as informações cadastrais do cliente."
-                      : "Informações cadastrais e resumo de relacionamento."}
+                      : modoModal === "excluir"
+                        ? "Confirme a operação antes de continuar."
+                        : "Informações cadastrais e resumo de relacionamento."}
                 </p>
               </div>
               <button
                 className="clientes-modal__close"
                 type="button"
                 onClick={fecharModal}
-                disabled={salvando}
+                disabled={salvando || excluindo}
                 aria-label="Fechar modal"
               >
                 <Icone nome="x" tamanho={19} />
               </button>
             </header>
 
-            {modoModal === "perfil" && clienteSelecionado ? (
+            {modoModal === "excluir" && clienteSelecionado ? (
+              <div className="clientes-delete-content">
+                <div className="clientes-delete-symbol" aria-hidden="true">
+                  <Icone nome="warning" tamanho={30} />
+                </div>
+
+                <p id="clientes-exclusao-descricao" className="clientes-delete-description">
+                  Tem certeza de que deseja excluir este cliente da sua base de dados?
+                </p>
+
+                <div className="clientes-delete-target">
+                  <span className="clientes-delete-avatar">{iniciais(clienteSelecionado.nome)}</span>
+                  <div>
+                    <strong>{clienteSelecionado.nome}</strong>
+                    <span>CPF: {clienteSelecionado.cpf || "Não informado"}</span>
+                  </div>
+                </div>
+
+                <div className="clientes-delete-warning">
+                  <Icone nome="warning" tamanho={17} />
+                  <span>Essa ação não pode ser desfeita. O cadastro será excluído permanentemente.</span>
+                </div>
+
+                {erro && (
+                  <div className="clientes-alert clientes-alert--error" role="alert">
+                    <span>{erro}</span>
+                  </div>
+                )}
+
+                <footer className="clientes-modal__footer clientes-delete-footer">
+                  <button
+                    className="clientes-button clientes-button--secondary"
+                    type="button"
+                    onClick={fecharModal}
+                    disabled={excluindo}
+                    autoFocus
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="clientes-button clientes-button--danger"
+                    type="button"
+                    onClick={() => void confirmarExclusao()}
+                    disabled={excluindo}
+                  >
+                    {excluindo ? (
+                      <> <span className="clientes-delete-loading" aria-hidden="true" /> Excluindo...</>
+                    ) : (
+                      <><Icone nome="trash" tamanho={16} /> Sim, excluir cliente</>
+                    )}
+                  </button>
+                </footer>
+              </div>
+            ) : modoModal === "perfil" && clienteSelecionado ? (
               <div className="clientes-profile-content">
                 <div className="clientes-profile-hero">
                   <span className="clientes-profile-avatar">

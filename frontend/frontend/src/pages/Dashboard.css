@@ -2514,10 +2514,9 @@
   }
 }
 
-.ms2-dashboard,
-.ms2-dashboard * {
-  transition-property: background-color, border-color, color;
-  transition-duration: 0.25s;
+/* Mudanças de tema suaves sem apagar as transições individuais dos componentes. */
+.ms2-dashboard {
+  transition: background-color 250ms ease, color 250ms ease;
 }
 
 /* =========================================================
@@ -2634,4 +2633,369 @@
 .ms2-dashboard--light .ms2-dashboard__theme-toggle {
   background: #ffffff;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+
+/* =========================================================
+   MS² VESTUÁRIO — MICROINTERAÇÕES V2
+   Incrementos leves: não altera o layout e não atinge os
+   formulários/tabelas internos dos módulos roteados.
+   ========================================================= */
+
+/* Variáveis auxiliares de efeitos (a paleta principal é preservada). */
+.ms2-dashboard {
+  --ms2-motion-curve: cubic-bezier(.2, .78, .22, 1);
+  --ms2-motion-fast: 210ms;
+  --ms2-motion-medium: 360ms;
+}
+
+/* Botão principal: brilho diagonal suave durante o hover. */
+.ms2-dashboard .ms2-dashboard__primary-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition: transform var(--ms2-motion-fast) var(--ms2-motion-curve),
+    box-shadow var(--ms2-motion-medium) ease,
+    filter var(--ms2-motion-fast) ease,
+    border-color var(--ms2-motion-fast) ease;
+}
+.ms2-dashboard .ms2-dashboard__primary-button::after {
+  content: "";
+  position: absolute;
+  inset: -70% auto -70% -60%;
+  width: 43%;
+  z-index: 0;
+  transform: rotate(22deg) translateX(-145%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.23), transparent);
+  pointer-events: none;
+  transition: transform 660ms var(--ms2-motion-curve);
+}
+
+.ms2-dashboard .ms2-dashboard__primary-button > svg,
+.ms2-dashboard .ms2-dashboard__primary-button > .ms2-dashboard__button-label {
+  position: relative;
+  z-index: 1;
+}
+
+/* Barra lateral: indicador fino e ícones com movimento controlado. */
+.ms2-dashboard .ms2-dashboard__nav-item {
+  isolation: isolate;
+  transition: color 220ms ease, background-color 220ms ease,
+    border-color 220ms ease, transform 250ms var(--ms2-motion-curve),
+    box-shadow 250ms ease;
+}
+.ms2-dashboard .ms2-dashboard__nav-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #a5b4fc, #67e8f9);
+  transform: scaleY(0);
+  transform-origin: center;
+  opacity: 0;
+  transition: transform 250ms var(--ms2-motion-curve), opacity 230ms ease;
+  pointer-events: none;
+}
+.ms2-dashboard .ms2-dashboard__nav-item svg {
+  transition: transform 270ms var(--ms2-motion-curve), color 200ms ease;
+}
+.ms2-dashboard .ms2-dashboard__brand-mark {
+  transition: transform 340ms var(--ms2-motion-curve),
+    box-shadow 340ms ease;
+}
+.ms2-dashboard .ms2-dashboard__sidebar-note-icon,
+.ms2-dashboard .ms2-dashboard__avatar,
+.ms2-dashboard .ms2-dashboard__theme-toggle svg {
+  transition: transform 320ms var(--ms2-motion-curve), filter 260ms ease;
+}
+.ms2-dashboard .ms2-dashboard__logout svg {
+  transition: transform 200ms var(--ms2-motion-curve), color 200ms ease;
+}
+
+/* O efeito do ponteiro pinta somente uma camada visual; não altera os dados. */
+.ms2-dashboard .ms2-dashboard__welcome-card {
+  isolation: isolate;
+  transition: border-color 380ms ease, box-shadow 380ms ease;
+}
+.ms2-dashboard .ms2-dashboard__welcome-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(320px circle at var(--ms2-pointer-x, 75%) var(--ms2-pointer-y, 42%),
+    rgba(129, 140, 248, .14), rgba(103, 232, 249, .025) 57%, transparent 80%);
+  transition: opacity 350ms ease;
+}
+.ms2-dashboard .ms2-dashboard__welcome-art { z-index: 2; }
+.ms2-dashboard .ms2-dashboard__art-card {
+  transition: transform 490ms var(--ms2-motion-curve),
+    box-shadow 430ms ease, border-color 430ms ease;
+}
+.ms2-dashboard .ms2-dashboard__art-ring {
+  transition: transform 550ms var(--ms2-motion-curve),
+    border-color 400ms ease;
+}
+.ms2-dashboard .ms2-dashboard__welcome-link svg {
+  transition: transform 260ms var(--ms2-motion-curve);
+}
+
+/* Indicadores: faixas cromáticas individuais, brilho localizado e elevação. */
+.ms2-dashboard .ms2-dashboard__metric-card {
+  --ms2-card-color: 129, 140, 248;
+  isolation: isolate;
+  transition: transform 320ms var(--ms2-motion-curve),
+    border-color 320ms ease,
+    box-shadow 340ms ease,
+    background-color 260ms ease;
+}
+.ms2-dashboard .ms2-dashboard__metric-card--cyan { --ms2-card-color: 6, 182, 212; }
+.ms2-dashboard .ms2-dashboard__metric-card--blue { --ms2-card-color: 59, 130, 246; }
+.ms2-dashboard .ms2-dashboard__metric-card--pink { --ms2-card-color: 192, 38, 211; }
+.ms2-dashboard .ms2-dashboard__metric-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(205px circle at var(--ms2-pointer-x, 75%) var(--ms2-pointer-y, 28%),
+    rgba(var(--ms2-card-color), .16), transparent 77%);
+  transition: opacity 300ms ease;
+}
+.ms2-dashboard .ms2-dashboard__metric-card::after {
+  content: "";
+  position: absolute;
+  left: 17px;
+  right: 17px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent,
+    rgba(var(--ms2-card-color), .88), transparent);
+  opacity: 0;
+  transform: scaleX(.25);
+  transition: opacity 270ms ease, transform 360ms var(--ms2-motion-curve);
+  pointer-events: none;
+}
+.ms2-dashboard .ms2-dashboard__metric-icon,
+.ms2-dashboard .ms2-dashboard__metric-copy strong {
+  transition: transform 350ms var(--ms2-motion-curve),
+    filter 350ms ease;
+}
+.ms2-dashboard .ms2-dashboard__metric-glow {
+  background: rgba(var(--ms2-card-color), .12);
+  transition: transform 400ms ease, opacity 400ms ease;
+}
+
+/* Cartões de conteúdo: acabamento vivo, sem mover a tabela inteira. */
+.ms2-dashboard .ms2-dashboard__content-grid > .ms2-dashboard__panel {
+  transition: border-color 300ms ease, box-shadow 350ms ease,
+    background-color 260ms ease;
+}
+.ms2-dashboard .ms2-dashboard__shortcut {
+  position: relative;
+  overflow: hidden;
+  transition: transform 250ms var(--ms2-motion-curve),
+    border-color 240ms ease,
+    background-color 240ms ease,
+    box-shadow 270ms ease;
+}
+.ms2-dashboard .ms2-dashboard__shortcut-icon,
+.ms2-dashboard .ms2-dashboard__shortcut > svg {
+  transition: transform 300ms var(--ms2-motion-curve),
+    color 200ms ease,
+    box-shadow 300ms ease;
+}
+.ms2-dashboard .ms2-dashboard__theme-toggle {
+  transition: background-color 250ms ease, border-color 250ms ease,
+    box-shadow 250ms ease, transform 250ms var(--ms2-motion-curve);
+}
+.ms2-dashboard .ms2-dashboard__icon-button.is-updating svg {
+  animation: ms2-refresh-spin 1.2s linear infinite;
+}
+.ms2-dashboard .ms2-dashboard__status-dot,
+.ms2-dashboard .ms2-dashboard__live-indicator span {
+  transition: box-shadow 300ms ease;
+}
+
+/* Efeitos de mouse apenas onde há hover real (sem hover "preso" no touch). */
+@media (hover: hover) and (pointer: fine) {
+  .ms2-dashboard .ms2-dashboard__nav-item:hover:not(:disabled) {
+    transform: translateX(4px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.045);
+  }
+  .ms2-dashboard .ms2-dashboard__nav-item:hover:not(:disabled)::before {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  .ms2-dashboard .ms2-dashboard__nav-item:hover:not(:disabled) svg {
+    transform: translateX(2px) scale(1.08);
+  }
+  .ms2-dashboard .ms2-dashboard__nav-item.is-active::before {
+    opacity: .82;
+    transform: scaleY(.92);
+  }
+  .ms2-dashboard .ms2-dashboard__brand:hover .ms2-dashboard__brand-mark {
+    transform: rotate(-4deg) scale(1.055);
+    box-shadow: 0 11px 28px rgba(99,102,241,.26);
+  }
+  .ms2-dashboard .ms2-dashboard__sidebar-note:hover .ms2-dashboard__sidebar-note-icon {
+    transform: translateY(-3px) rotate(-5deg);
+  }
+  .ms2-dashboard .ms2-dashboard__logout:hover svg { transform: translateX(3px); }
+  .ms2-dashboard .ms2-dashboard__profile:hover .ms2-dashboard__avatar {
+    transform: translateY(-2px);
+    filter: brightness(1.12);
+  }
+  .ms2-dashboard .ms2-dashboard__theme-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(99,102,241,.15);
+  }
+  .ms2-dashboard .ms2-dashboard__theme-toggle:hover svg { transform: rotate(22deg); }
+  .ms2-dashboard .ms2-dashboard__primary-button:hover::after {
+    transform: rotate(22deg) translateX(610%);
+  }
+  .ms2-dashboard .ms2-dashboard__welcome-card:hover {
+    border-color: rgba(129,140,248,.35);
+    box-shadow: 0 22px 54px rgba(0,0,0,.17), 0 0 28px rgba(99,102,241,.045);
+  }
+  .ms2-dashboard .ms2-dashboard__welcome-card:hover::after { opacity: 1; }
+  .ms2-dashboard .ms2-dashboard__welcome-card:hover .ms2-dashboard__art-card {
+    transform: translateY(-6px) rotate(1deg);
+    border-color: rgba(165,180,252,.52);
+    box-shadow: 0 23px 47px rgba(0,0,0,.27), 0 0 32px rgba(99,102,241,.16);
+  }
+  .ms2-dashboard .ms2-dashboard__welcome-card:hover .ms2-dashboard__art-ring--outer {
+    transform: scale(1.035);
+    border-color: rgba(129,140,248,.3);
+  }
+  .ms2-dashboard .ms2-dashboard__welcome-card:hover .ms2-dashboard__art-ring--inner {
+    transform: scale(.96) rotate(12deg);
+  }
+  .ms2-dashboard .ms2-dashboard__welcome-link:hover svg { transform: translateX(4px); }
+  .ms2-dashboard .ms2-dashboard__metric-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(var(--ms2-card-color), .45);
+    box-shadow: 0 19px 38px rgba(0,0,0,.15),
+      0 0 26px rgba(var(--ms2-card-color), .07);
+  }
+  .ms2-dashboard .ms2-dashboard__metric-card:hover::before { opacity: 1; }
+  .ms2-dashboard .ms2-dashboard__metric-card:hover::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  .ms2-dashboard .ms2-dashboard__metric-card:hover .ms2-dashboard__metric-icon {
+    transform: translateY(-3px) rotate(-4deg) scale(1.055);
+    filter: drop-shadow(0 6px 12px rgba(var(--ms2-card-color), .21));
+  }
+  .ms2-dashboard .ms2-dashboard__metric-card:hover .ms2-dashboard__metric-copy strong {
+    transform: translateY(-1px);
+  }
+  .ms2-dashboard .ms2-dashboard__metric-card:hover .ms2-dashboard__metric-glow {
+    transform: scale(1.55);
+  }
+  .ms2-dashboard .ms2-dashboard__content-grid > .ms2-dashboard__panel:hover {
+    border-color: rgba(129, 140, 248, .27);
+    box-shadow: 0 15px 36px rgba(0,0,0,.13);
+  }
+  .ms2-dashboard .ms2-dashboard__shortcut:hover {
+    transform: translateX(5px);
+    border-color: rgba(129,140,248,.23);
+    box-shadow: inset 3px 0 0 rgba(129,140,248,.7);
+  }
+  .ms2-dashboard .ms2-dashboard__shortcut:hover .ms2-dashboard__shortcut-icon {
+    transform: translateY(-2px) rotate(-4deg);
+  }
+  .ms2-dashboard .ms2-dashboard__shortcut:hover > svg {
+    transform: translate(3px, -3px);
+  }
+  .ms2-dashboard .ms2-dashboard__table tbody tr:hover .ms2-dashboard__sale-code {
+    background: rgba(129,140,248,.2);
+    border-color: rgba(129,140,248,.27);
+  }
+  .ms2-dashboard .ms2-dashboard__icon-button:hover:not(:disabled) {
+    transform: translateY(-2px) rotate(13deg);
+    box-shadow: 0 6px 18px rgba(99,102,241,.12);
+  }
+}
+
+/* Entrada curta ao visitar a tela principal — sem efeitos nos módulos filhos. */
+@keyframes ms2-home-appear {
+  from { opacity: 0; transform: translateY(11px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ms2-metric-appear {
+  from { opacity: 0; transform: translateY(12px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes ms2-refresh-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes ms2-orb-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-10px, 7px, 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ms2-dashboard .ms2-dashboard__welcome-orb--one {
+    animation: ms2-orb-drift 15s ease-in-out infinite;
+  }
+  .ms2-dashboard .ms2-dashboard__welcome-orb--two {
+    animation: ms2-orb-drift 19s ease-in-out 1.3s infinite reverse;
+  }
+  .ms2-dashboard .ms2-dashboard__page-heading {
+    animation: ms2-home-appear 480ms var(--ms2-motion-curve) backwards;
+  }
+  .ms2-dashboard .ms2-dashboard__welcome-card {
+    animation: ms2-home-appear 560ms 65ms var(--ms2-motion-curve) backwards;
+  }
+  .ms2-dashboard .ms2-dashboard__metric-card {
+    animation: ms2-metric-appear 510ms var(--ms2-stagger, 0ms) var(--ms2-motion-curve) backwards;
+  }
+  .ms2-dashboard .ms2-dashboard__content-grid > .ms2-dashboard__panel {
+    animation: ms2-home-appear 590ms 165ms var(--ms2-motion-curve) backwards;
+  }
+}
+
+/* Contraste e sombra ajustados no modo claro. */
+.ms2-dashboard.ms2-dashboard--light .ms2-dashboard__metric-card::before {
+  background: radial-gradient(205px circle at var(--ms2-pointer-x, 75%) var(--ms2-pointer-y, 28%),
+    rgba(var(--ms2-card-color), .10), transparent 78%);
+}
+.ms2-dashboard.ms2-dashboard--light .ms2-dashboard__welcome-card::after {
+  background: radial-gradient(320px circle at var(--ms2-pointer-x, 75%) var(--ms2-pointer-y, 42%),
+    rgba(79,70,229,.085), transparent 80%);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ms2-dashboard.ms2-dashboard--light .ms2-dashboard__metric-card:hover,
+  .ms2-dashboard.ms2-dashboard--light .ms2-dashboard__content-grid > .ms2-dashboard__panel:hover {
+    box-shadow: 0 15px 34px rgba(30,41,59,.10);
+  }
+  .ms2-dashboard.ms2-dashboard--light .ms2-dashboard__welcome-card:hover {
+    box-shadow: 0 16px 38px rgba(30,41,59,.11);
+  }
+}
+
+/* Acessibilidade: nenhum movimento obrigatório. */
+@media (prefers-reduced-motion: reduce) {
+  .ms2-dashboard .ms2-dashboard__page-heading,
+  .ms2-dashboard .ms2-dashboard__welcome-card,
+  .ms2-dashboard .ms2-dashboard__metric-card,
+  .ms2-dashboard .ms2-dashboard__content-grid > .ms2-dashboard__panel,
+  .ms2-dashboard .ms2-dashboard__icon-button.is-updating svg {
+    animation: none !important;
+  }
+  .ms2-dashboard .ms2-dashboard__nav-item:hover,
+  .ms2-dashboard .ms2-dashboard__metric-card:hover,
+  .ms2-dashboard .ms2-dashboard__shortcut:hover,
+  .ms2-dashboard .ms2-dashboard__primary-button:hover,
+  .ms2-dashboard .ms2-dashboard__theme-toggle:hover,
+  .ms2-dashboard .ms2-dashboard__brand:hover .ms2-dashboard__brand-mark,
+  .ms2-dashboard .ms2-dashboard__welcome-card:hover .ms2-dashboard__art-card {
+    transform: none !important;
+  }
 }
